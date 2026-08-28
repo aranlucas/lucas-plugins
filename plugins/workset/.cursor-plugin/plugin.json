@@ -1,12 +1,22 @@
 {
   "name": "workset",
-  "displayName": "workset — Workout Planner",
+  "displayName": "workset \u2014 Workout Planner",
   "version": "1.0.0",
-  "description": "workset training companion for Cursor — workout planning, set-by-set logging, and progress context for opengym2.",
-  "author": { "name": "Lucas", "email": "aranlucas@gmail.com" },
+  "description": "workset training companion \u2014 workout planning, set-by-set logging, and progress context for opengym2.",
+  "author": {
+    "name": "Lucas",
+    "email": "aranlucas@gmail.com"
+  },
   "homepage": "https://github.com/aranlucas/opengym2",
   "repository": "https://github.com/aranlucas/lucas-plugins",
   "license": "ISC",
-  "keywords": ["fitness", "workout", "gym", "training", "workset"],
-  "logo": "assets/logo.svg"
+  "keywords": [
+    "fitness",
+    "workout",
+    "gym",
+    "training",
+    "workset"
+  ],
+  "logo": "assets/logo.svg",
+  "mcpServers": "./mcp.json"
 }

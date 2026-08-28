@@ -5,20 +5,20 @@
     "email": "aranlucas@gmail.com"
   },
   "metadata": {
-    "description": "Food & gym Agent Plugins — ai-shopping (Kroger/QFC) + workset (opengym2)",
+    "description": "Food & gym Agent Plugins \u2014 ai-shopping (Kroger/QFC) + workset (opengym2)",
     "version": "0.1.0",
     "pluginRoot": "./plugins"
   },
   "plugins": [
     {
       "name": "ai-shopping",
-      "source": "./plugins/ai-shopping",
-      "description": "Kroger/QFC shopping — product search, cart, lists, pantry, weekly deals"
+      "source": "./ai-shopping",
+      "description": "Kroger/QFC shopping \u2014 product search, cart, lists, pantry, weekly deals, meal-planning context"
     },
     {
       "name": "workset",
-      "source": "./plugins/workset",
-      "description": "workset — mobile-first workout planner & set-by-set training log"
+      "source": "./workset",
+      "description": "workset training companion \u2014 workout planning, set-by-set logging, progress context"
     }
   ]
 }
