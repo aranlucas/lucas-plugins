@@ -1,0 +1,7 @@
+{
+  "name": "lucas-plugins",
+  "private": true,
+  "description": "Food & gym plugins catalog — ai-shopping-mcp + opengym2",
+  "version": "0.0.1",
+  "type": "module"
+}
