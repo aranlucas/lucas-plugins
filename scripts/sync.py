@@ -1,136 +1,271 @@
 #!/usr/bin/env python3
-"""Sync portable Agent Plugins core to client marketplace manifests.
+"""Validate the portable plugins and emit Claude/Cursor marketplace files.
 
 Source of truth:
-  marketplace.json  (canonical catalog, pluginRoot + source)
-  plugins/*/plugin.json  (portable, https://agent-plugins.org/schemas/1.0.0/plugin.schema.json)
-  plugins/*/mcp.json     (portable, https://agent-plugins.org/schemas/1.0.0/mcp.schema.json) -> Cursor expects type http via mcpServers field
+  marketplace.json
+  plugins/*/plugin.json
+  plugins/*/mcp.json
+  plugins/*/skills/*/SKILL.md
 
-This script validates and *emits*:
-  .claude-plugin/marketplace.json
-  .cursor-plugin/marketplace.json
-  plugins/*/.claude-plugin/plugin.json
-  plugins/*/.cursor-plugin/plugin.json  (with mcpServers + http translation)
-
-Fixes double-prefix bug: with pluginRoot "./plugins", source must be "./ai-shopping" not "./plugins/ai-shopping"
-Cursor joins pluginRoot + source and sparse-checkouts plugins/plugins/ai-shopping if double-prefixed.
+Claude marketplace paths require a leading ``./``. Cursor's importer expects
+bare paths and joins ``metadata.pluginRoot`` with each plugin's ``source``;
+emitting the Claude form there can make it request ``plugins/plugins/<name>``.
 """
-import json, pathlib, sys, shutil
+
+import json
+import pathlib
+import re
+import sys
+from urllib.parse import urlparse
+
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
+MCP_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
+MCP_TYPES = {"stdio", "streamable-http", "sse"}
+NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
 
-def load(p): return json.loads(p.read_text())
-def save(p, data): 
-    p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(json.dumps(data, indent=2)+"\n")
 
-def fix_source(source, plugin_root="./plugins"):
-    # if pluginRoot is ./plugins and source is ./plugins/x -> ./x
-    if source.startswith("./plugins/") and plugin_root == "./plugins":
-        return source.replace("./plugins/", "./", 1)
-    return source
+def load(path):
+    return json.loads(path.read_text())
+
+
+def save(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(data, indent=2) + "\n")
+
+
+def clean_path(value):
+    """Return a normalized, repository-relative marketplace path."""
+    if not isinstance(value, str) or not value.strip():
+        raise ValueError("must be a non-empty string")
+    value = value.strip()
+    while value.startswith("./"):
+        value = value[2:]
+    path = pathlib.PurePosixPath(value)
+    if path.is_absolute() or ".." in path.parts or value in {"", "."}:
+        raise ValueError(f"must be a safe repository-relative path: {value!r}")
+    return path.as_posix()
+
+
+def parse_frontmatter(path):
+    text = path.read_text()
+    lines = text.splitlines()
+    if not lines or lines[0] != "---":
+        raise ValueError("missing opening YAML frontmatter delimiter")
+    try:
+        end = lines.index("---", 1)
+    except ValueError as exc:
+        raise ValueError("missing closing YAML frontmatter delimiter") from exc
+
+    values = {}
+    for line in lines[1:end]:
+        if ":" in line:
+            key, value = line.split(":", 1)
+            values[key.strip()] = value.strip()
+    return values
+
+
+def validate_plugin(name, plugin_dir, errors):
+    manifest_path = plugin_dir / "plugin.json"
+    mcp_path = plugin_dir / "mcp.json"
+
+    if not manifest_path.is_file():
+        errors.append(f"{manifest_path.relative_to(ROOT)}: missing")
+        return
+
+    try:
+        manifest = load(manifest_path)
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(f"{manifest_path.relative_to(ROOT)}: invalid JSON: {exc}")
+        return
+
+    if manifest.get("$schema") != PLUGIN_SCHEMA:
+        errors.append(f"{manifest_path.relative_to(ROOT)}: expected $schema {PLUGIN_SCHEMA}")
+    if manifest.get("name") != name:
+        errors.append(
+            f"{manifest_path.relative_to(ROOT)}: name must match marketplace entry {name!r}"
+        )
+
+    if mcp_path.exists():
+        try:
+            mcp = load(mcp_path)
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(f"{mcp_path.relative_to(ROOT)}: invalid JSON: {exc}")
+            mcp = None
+
+        if mcp is not None:
+            if mcp.get("$schema") != MCP_SCHEMA:
+                errors.append(f"{mcp_path.relative_to(ROOT)}: expected $schema {MCP_SCHEMA}")
+            servers = mcp.get("mcpServers")
+            if not isinstance(servers, dict):
+                errors.append(f"{mcp_path.relative_to(ROOT)}: mcpServers must be an object")
+            else:
+                for server_name, server in servers.items():
+                    label = f"{mcp_path.relative_to(ROOT)}: mcpServers.{server_name}"
+                    if not isinstance(server, dict):
+                        errors.append(f"{label} must be an object")
+                        continue
+                    server_type = server.get("type")
+                    if server_type not in MCP_TYPES:
+                        errors.append(
+                            f"{label}.type must be one of {sorted(MCP_TYPES)}, got {server_type!r}"
+                        )
+                    if server_type in {"streamable-http", "sse"}:
+                        url = server.get("url")
+                        parsed = urlparse(url) if isinstance(url, str) else None
+                        if not parsed or parsed.scheme not in {"http", "https"} or not parsed.netloc:
+                            errors.append(f"{label}.url must be an absolute HTTP(S) URL")
+
+    skills_dir = plugin_dir / "skills"
+    if skills_dir.exists():
+        for skill in sorted(skills_dir.glob("*/SKILL.md")):
+            try:
+                frontmatter = parse_frontmatter(skill)
+            except (OSError, ValueError) as exc:
+                errors.append(f"{skill.relative_to(ROOT)}: {exc}")
+                continue
+            if frontmatter.get("name") != skill.parent.name:
+                errors.append(
+                    f"{skill.relative_to(ROOT)}: name must match directory {skill.parent.name!r}"
+                )
+            if not frontmatter.get("description"):
+                errors.append(f"{skill.relative_to(ROOT)}: description is required")
+
 
 def main():
-    ok=True
-    # 1. Validate portable
-    for d in [ROOT/"plugins/ai-shopping", ROOT/"plugins/workset"]:
-        for f in [d/"plugin.json", d/"mcp.json"]:
-            if not f.exists():
-                print(f"missing {f}", file=sys.stderr); ok=False; continue
-            try:
-                data=load(f)
-                assert "$schema" in data, f"{f} missing $schema"
-            except Exception as e:
-                print(f"invalid {f}: {e}", file=sys.stderr); ok=False
-        for skill in (d/"skills").glob("*/SKILL.md"):
-            if not skill.read_text().startswith("---"):
-                print(f"bad frontmatter {skill}", file=sys.stderr); ok=False
+    canonical_path = ROOT / "marketplace.json"
+    try:
+        marketplace = load(canonical_path)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"invalid marketplace.json: {exc}", file=sys.stderr)
+        return 1
 
-    # 2. Sync marketplaces from canonical marketplace.json
-    canon = ROOT/"marketplace.json"
-    if not canon.exists():
-        print("missing marketplace.json", file=sys.stderr); sys.exit(1)
-    mp = load(canon)
-    plugin_root = mp.get("metadata", {}).get("pluginRoot", "./plugins")
+    errors = []
+    metadata = marketplace.setdefault("metadata", {})
+    try:
+        plugin_root = clean_path(metadata.get("pluginRoot", "plugins"))
+    except ValueError as exc:
+        errors.append(f"marketplace.json: metadata.pluginRoot {exc}")
+        plugin_root = "plugins"
+    metadata["pluginRoot"] = f"./{plugin_root}"
 
-    # Fix double-prefix in canonical
-    for pl in mp.get("plugins", []):
-        orig = pl.get("source","")
-        fixed = fix_source(orig, plugin_root)
-        if orig != fixed:
-            print(f"fix {pl['name']}: source {orig} -> {fixed}")
-            pl["source"] = fixed
-    # Save canonical if fixed
-    save(canon, mp)
+    entries = marketplace.get("plugins")
+    if not isinstance(entries, list):
+        errors.append("marketplace.json: plugins must be an array")
+        entries = []
 
-    # Emit .claude-plugin/marketplace.json (verbatim copy with $schema)
-    save(ROOT/".claude-plugin/marketplace.json", mp)
+    seen = set()
+    resolved = []
+    for index, entry in enumerate(entries):
+        if not isinstance(entry, dict):
+            errors.append(f"marketplace.json: plugins[{index}] must be an object")
+            continue
+        name = entry.get("name")
+        if not isinstance(name, str) or not NAME_RE.fullmatch(name):
+            errors.append(f"marketplace.json: plugins[{index}].name is not lowercase kebab-case")
+            continue
+        if name in seen:
+            errors.append(f"marketplace.json: duplicate plugin name {name!r}")
+        seen.add(name)
 
-    # Emit .cursor-plugin/marketplace.json (Cursor variant: no $schema on plugins, description short)
-    cursor_mp = {
-        "name": mp["name"],
-        "owner": mp["owner"],
+        try:
+            source = clean_path(entry.get("source", name))
+        except ValueError as exc:
+            errors.append(f"marketplace.json: plugins[{index}].source {exc}")
+            continue
+
+        # Historical catalogs used source="./plugins/name" with pluginRoot="./plugins".
+        # Keep only the path relative to pluginRoot so clients join it exactly once.
+        prefix = f"{plugin_root}/"
+        if source.startswith(prefix):
+            source = source[len(prefix) :]
+        entry["source"] = f"./{source}"
+
+        plugin_dir = ROOT / plugin_root / source
+        try:
+            plugin_dir.resolve().relative_to(ROOT.resolve())
+        except ValueError:
+            errors.append(f"marketplace.json: source for {name!r} escapes the repository")
+            continue
+        if not plugin_dir.is_dir():
+            errors.append(
+                f"marketplace.json: {plugin_root}/{source} does not exist for plugin {name!r}"
+            )
+            continue
+        resolved.append((name, entry, source, plugin_dir))
+        validate_plugin(name, plugin_dir, errors)
+
+    if errors:
+        for error in errors:
+            print(f"error: {error}", file=sys.stderr)
+        print(f"validate: failed ({len(errors)} error(s))", file=sys.stderr)
+        return 1
+
+    save(canonical_path, marketplace)
+    save(ROOT / ".claude-plugin/marketplace.json", marketplace)
+
+    cursor_marketplace = {
+        "name": marketplace["name"],
+        "owner": marketplace["owner"],
         "metadata": {
-            "description": mp["metadata"]["description"],
-            "version": mp["metadata"]["version"],
-            "pluginRoot": mp["metadata"]["pluginRoot"],
+            "description": metadata["description"],
+            "version": metadata["version"],
+            "pluginRoot": plugin_root,
         },
         "plugins": [
-            {"name": p["name"], "source": p["source"], "description": p["description"]}
-            for p in mp["plugins"]
-        ]
+            {
+                "name": entry["name"],
+                "source": source,
+                "description": entry["description"],
+                "version": entry.get("version"),
+                "author": entry.get("author"),
+            }
+            for _, entry, source, _ in resolved
+        ],
     }
-    save(ROOT/".cursor-plugin/marketplace.json", cursor_mp)
+    for entry in cursor_marketplace["plugins"]:
+        for key in ["version", "author"]:
+            if entry[key] is None:
+                del entry[key]
+    save(ROOT / ".cursor-plugin/marketplace.json", cursor_marketplace)
 
-    # 3. Sync per-plugin client manifests
-    for d in [ROOT/"plugins/ai-shopping", ROOT/"plugins/workset"]:
-        name = d.name
-        portable = load(d/"plugin.json")
-        # .claude-plugin/plugin.json - minimal portable mirror
-        claude_out = ROOT/f"plugins/{name}/.claude-plugin/plugin.json"
+    for name, _, _, plugin_dir in resolved:
+        portable = load(plugin_dir / "plugin.json")
+        common = {
+            "name": portable["name"],
+            "version": portable.get("version"),
+            "description": portable.get("description"),
+            "author": portable.get("author"),
+            "homepage": portable.get("homepage"),
+            "repository": portable.get("repository"),
+            "license": portable.get("license"),
+            "keywords": portable.get("keywords"),
+        }
+
         claude_data = {
-            "name": portable["name"],
-            "version": portable["version"],
-            "description": portable["description"],
-            "author": portable["author"],
-            "homepage": portable.get("homepage"),
-            "repository": portable.get("repository"),
+            key: value
+            for key, value in common.items()
+            if key not in {"license", "keywords"} and value is not None
         }
-        # remove None
-        claude_data = {k:v for k,v in claude_data.items() if v is not None}
-        save(claude_out, claude_data)
+        save(plugin_dir / ".claude-plugin/plugin.json", claude_data)
 
-        # .cursor-plugin/plugin.json - must include mcpServers + logo
-        cursor_out = ROOT/f"plugins/{name}/.cursor-plugin/plugin.json"
-        existing = load(cursor_out) if cursor_out.exists() else {}
+        existing_path = plugin_dir / ".cursor-plugin/plugin.json"
+        existing = load(existing_path) if existing_path.exists() else {}
         cursor_data = {
-            "name": portable["name"],
-            "displayName": existing.get("displayName") or ("AI Shopping (Kroger/QFC)" if name=="ai-shopping" else "workset — Workout Planner"),
-            "version": portable["version"],
-            "description": portable["description"] if name=="workset" else "Kroger/QFC shopping for Cursor — product search, cart, shopping lists, pantry, weekly deals, and meal-planning context via MCP.",
-            "author": portable["author"],
-            "homepage": portable.get("homepage"),
-            "repository": portable.get("repository"),
-            "license": portable.get("license","ISC"),
-            "keywords": portable.get("keywords", []),
+            **{key: value for key, value in common.items() if value is not None},
+            "displayName": existing.get("displayName")
+            or ("AI Shopping (Kroger/QFC)" if name == "ai-shopping" else name),
             "logo": "assets/logo.svg",
-            "mcpServers": "./mcp.json",
         }
-        save(cursor_out, cursor_data)
+        # Cursor discovers a valid root mcp.json automatically. Omitting an override
+        # keeps the same portable file authoritative in every Agent Plugins client.
+        save(existing_path, cursor_data)
 
-        # Ensure mcp.json transport is http for Cursor (portable uses streamable-http, Cursor uses http)
-        # Keep portable as http per user fix - translate if needed
-        mcp_p = d/"mcp.json"
-        mcp = load(mcp_p)
-        for srv in mcp.get("mcpServers", {}).values():
-            if srv.get("type") == "streamable-http":
-                srv["type"] = "http"
-                print(f"translate {name} mcp type streamable-http -> http for Cursor")
-        save(mcp_p, mcp)
+    print(f"sync: emitted marketplaces + {len(resolved)} plugin manifests")
+    print("validate: passed")
+    return 0
 
-    print("sync: emitted marketplaces + client manifests")
-    print("validate:", "passed" if ok else "failed")
-    return 0 if ok else 1
 
 if __name__ == "__main__":
     sys.exit(main())

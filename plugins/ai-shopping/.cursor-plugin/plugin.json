@@ -1,8 +1,7 @@
 {
   "name": "ai-shopping",
-  "displayName": "AI Shopping (Kroger/QFC)",
   "version": "1.0.0",
-  "description": "Kroger/QFC shopping for Cursor \u2014 product search, cart, shopping lists, pantry, weekly deals, and meal-planning context via MCP.",
+  "description": "Kroger/QFC shopping \u2014 product search, cart, shopping lists, pantry, weekly deals, and meal-planning context via MCP.",
   "author": {
     "name": "Lucas",
     "email": "aranlucas@gmail.com"
@@ -18,6 +17,6 @@
     "groceries",
     "food"
   ],
-  "logo": "assets/logo.svg",
-  "mcpServers": "./mcp.json"
+  "displayName": "AI Shopping (Kroger/QFC)",
+  "logo": "assets/logo.svg"
 }

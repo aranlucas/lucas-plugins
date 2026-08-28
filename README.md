@@ -50,7 +50,7 @@ plugins/workset
 
 ```bash
 python3 scripts/sync.py
-# checks $schema match, mcpServers types, SKILL.md frontmatter
+# checks marketplace paths, schema IDs, MCP transports, and skill frontmatter
 ```
 
 Portable `plugin.json`/`mcp.json` `$schema` must match (§10.1): `https://agent-plugins.org/schemas/1.0.0/...`.

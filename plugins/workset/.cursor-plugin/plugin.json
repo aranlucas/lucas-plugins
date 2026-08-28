@@ -1,6 +1,5 @@
 {
   "name": "workset",
-  "displayName": "workset \u2014 Workout Planner",
   "version": "1.0.0",
   "description": "workset training companion \u2014 workout planning, set-by-set logging, and progress context for opengym2.",
   "author": {
@@ -17,6 +16,6 @@
     "training",
     "workset"
   ],
-  "logo": "assets/logo.svg",
-  "mcpServers": "./mcp.json"
+  "displayName": "workset \u2014 Workout Planner",
+  "logo": "assets/logo.svg"
 }
