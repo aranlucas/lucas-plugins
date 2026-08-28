@@ -1,16 +1,15 @@
-# AI Shopping (Kroger/QFC) — Cursor Plugin
+# ai-shopping — Agent Plugin
 
-Connects Cursor to the Kroger/QFC shopping MCP at `https://ai-meal-planner-mcp.aranlucas.workers.dev/mcp`.
+[Agent Plugin](https://agent-plugins.org) for Kroger/QFC shopping. Connects to the remote MCP at `https://ai-meal-planner-mcp.aranlucas.workers.dev/mcp`.
 
-Install via **Customize → Plugins** or publish flow at [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish).
+## Install
 
-## MCP
+This directory is a standalone plugin (`plugin.json` at root). Install the path `plugins/ai-shopping` in any Agent Plugins v1 client (Cursor, VS Code, Claude Code, etc.).
 
-Bundled `mcp.json` points to the remote MCP server — no local install needed. OAuth is handled by Cursor on connect.
+## What it provides
 
-## Skill: shopping-assistant
-
-Use when shopping, planning meals, or managing pantry/kitchen inventory. See `skills/shopping-assistant/SKILL.md`.
+- **MCP**: `ai-shopping` → `streamable-http` `https://ai-meal-planner-mcp.aranlucas.workers.dev/mcp` (OAuth)
+- **Skill**: `shopping-assistant` (`skills/shopping-assistant/SKILL.md`)
 
 ## Source
 

@@ -1,0 +1,14 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "workset",
+  "version": "1.0.0",
+  "description": "workset training companion — workout planning, set-by-set logging, and progress context for opengym2.",
+  "author": {
+    "name": "Lucas",
+    "email": "aranlucas@gmail.com"
+  },
+  "homepage": "https://github.com/aranlucas/opengym2",
+  "repository": "https://github.com/aranlucas/lucas-plugins",
+  "license": "ISC",
+  "keywords": ["fitness", "workout", "gym", "training", "workset"]
+}

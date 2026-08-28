@@ -1,8 +1,0 @@
----
-description: Guidance for grocery shopping and meal-planning tasks
-alwaysApply: false
-globs:
-  - "**/*"
----
-
-shopping-guidance: When the user asks to shop, plan meals, or manage groceries at Kroger/QFC, prefer the `shopping-assistant` skill. Follow the golden path: `shop_for_items` → `add_shopping_list_to_cart` → `view_cart`. Check `get_shopping_profile` and `get_weekly_deals` before making personalized or budget-aware suggestions.

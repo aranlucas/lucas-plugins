@@ -1,16 +1,17 @@
-# workset — Cursor Plugin
+# workset — Agent Plugin
 
-Training companion for [aranlucas/opengym2](https://github.com/aranlucas/opengym2) (workset): workout planning, set-by-set logging, and progress context.
+[Agent Plugin](https://agent-plugins.org) for `workset` (opengym2) — workout planning, set-by-set logging, and progress context.
 
-Connects Cursor to the hosted workset MCP at `https://opengym2.up.railway.app/mcp` (Railway, OAuth via `/.well-known/oauth-protected-resource`).
+## Install
 
-Bundled `mcp.json` points to the remote MCP server — OAuth is handled by Cursor on connect.
+This directory is a standalone plugin (`plugin.json` at root). Install the path `plugins/workset` in any Agent Plugins v1 client.
 
-This plugin also ships a skill and rule for Cursor agents; the app can also run locally (`go run ./cmd/opengym-api`) or wherever you host opengym2.
+## What it provides
 
-## Skill: workset-coach
+- **MCP**: `workset` → `streamable-http` `https://opengym2.up.railway.app/mcp` (OAuth, `/.well-known/oauth-protected-resource`)
+- **Skill**: `workset-coach` (`skills/workset-coach/SKILL.md`)
 
-`skills/workset-coach/SKILL.md` — activated when the user asks to plan, log, or review training.
+App also runs locally: `go run ./cmd/opengym-api` in [aranlucas/opengym2](https://github.com/aranlucas/opengym2).
 
 ## Source
 
