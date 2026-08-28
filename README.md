@@ -1,47 +1,56 @@
-# lucas-plugins — Agent Plugins
+# lucas-plugins — Agent Plugins + Marketplace
 
-Collection of [Agent Plugins](https://agent-plugins.org) (open standard, v1.0) for food & gym. Portable across Cursor, VS Code, Claude Code, and other conformant clients — each subfolder is a standalone plugin ( `plugin.json` at its root).
+[Agent Plugins](https://agent-plugins.org) v1.0 portable core for food & gym, plus a marketplace wrapper for distribution. The portable part (`plugin.json` + `mcp.json` + `skills/`) works in any v1 client; the marketplace files are the distribution layer the spec leaves to clients.
 
 ## Plugins
 
-| Plugin | Directory | What it provides | Upstream |
-|---|---|---|---|
-| **ai-shopping** | `plugins/ai-shopping/` | Kroger/QFC shopping — product search, cart, lists, pantry, weekly deals, meal-planning context via MCP | [aranlucas/ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp) + `https://ai-meal-planner-mcp.aranlucas.workers.dev/mcp` |
-| **workset** | `plugins/workset/` | `workset` workout planning & set-by-set training log (`opengym2`) — MCP at `https://opengym2.up.railway.app/mcp` + `workset-coach` skill | [aranlucas/opengym2](https://github.com/aranlucas/opengym2) |
+| Plugin | Directory | Portable core | MCP | Upstream |
+|---|---|---|---|---|
+| **ai-shopping** | `plugins/ai-shopping/` | `plugin.json`, `skills/shopping-assistant/SKILL.md` | `streamable-http` `https://ai-meal-planner-mcp.aranlucas.workers.dev/mcp` | [aranlucas/ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp) |
+| **workset** | `plugins/workset/` | `plugin.json`, `skills/workset-coach/SKILL.md` | `streamable-http` `https://opengym2.up.railway.app/mcp` | [aranlucas/opengym2](https://github.com/aranlucas/opengym2) |
+
+## Why marketplace is separate
+
+Spec (§4–§10) defines only the plugin package (`plugin.json` at each plugin root, fixed `mcp.json`/`skills/`). It explicitly does **not** define the marketplace — that is client distribution. This repo keeps the portable core as source of truth and generates the client marketplaces:
+
+```
+marketplace.json                      # source of truth (canonical catalog)
+plugins/*/plugin.json                 # portable manifests (edit these)
+plugins/*/mcp.json                    # portable MCP (edit these)
+plugins/*/skills/*/SKILL.md           # portable skills
+.claude-plugin/marketplace.json       # generated — Claude Code
+.cursor-plugin/marketplace.json       # generated — Cursor
+plugins/*/.claude-plugin/plugin.json  # generated mirrors
+plugins/*/.cursor-plugin/plugin.json  # generated mirrors
+scripts/sync.py                       # validate + regenerate
+```
 
 ## Install
 
-Each plugin is directory-installable (spec §4). Point your client at the plugin directory, e.g.:
+**As a marketplace (picker):**
 
-```bash
-# example — client that installs from a local or git path
-# Cursor / VS Code / Claude Code (Agent Plugins v1) — use the plugin path directly
+Claude Code:
+```
+/plugin marketplace add aranlucas/lucas-plugins
+/plugin install ai-shopping@lucas-plugins
+/plugin install workset@lucas-plugins
+```
+
+Cursor: Dashboard → **Plugins → Add Marketplace → Import from Repo** → `aranlucas/lucas-plugins`, then enable `ai-shopping` / `workset`.
+
+**As direct plugin paths (no marketplace):**
+
+Point your client at the plugin directory:
+```
 plugins/ai-shopping
 plugins/workset
 ```
 
-Or clone and add via your client’s plugin UI:
+## Validate
 
 ```bash
-git clone https://github.com/aranlucas/lucas-plugins.git
-# then add `lucas-plugins/plugins/ai-shopping` and `lucas-plugins/plugins/workset` in your client
+python3 scripts/sync.py
+# checks $schema match, mcpServers types, SKILL.md frontmatter
 ```
 
-## Layout per plugin (spec §4.2)
-
-```
-plugin.json          # required manifest ($schema https://agent-plugins.org/schemas/1.0.0/plugin.schema.json)
-mcp.json             # MCP servers ( $schema .../mcp.schema.json, type streamable-http )
-skills/<name>/SKILL.md
-```
-
-Only `skills/` and `mcp.json` are portable in v1 — rules/agents/hooks are Cursor-specific extensions and not included here.
-
-## Validation
-
-Validate `plugin.json` and `mcp.json` against the schemas above. `plugin.json`/`mcp.json` `$schema` versions must match (spec §10.1).
-
-## Sources
-
-- MCP server: [aranlucas/ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp)
-- Training app: [aranlucas/opengym2](https://github.com/aranlucas/opengym2)
+Portable `plugin.json`/`mcp.json` `$schema` must match (§10.1): `https://agent-plugins.org/schemas/1.0.0/...`.

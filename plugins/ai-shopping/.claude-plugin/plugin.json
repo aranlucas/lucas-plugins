@@ -1,0 +1,8 @@
+{
+  "name": "ai-shopping",
+  "version": "1.0.0",
+  "description": "Kroger/QFC shopping — product search, cart, shopping lists, pantry, weekly deals, and meal-planning context via MCP.",
+  "author": { "name": "Lucas", "email": "aranlucas@gmail.com" },
+  "homepage": "https://github.com/aranlucas/ai-shopping-mcp",
+  "repository": "https://github.com/aranlucas/lucas-plugins"
+}

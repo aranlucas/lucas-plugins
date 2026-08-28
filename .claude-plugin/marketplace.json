@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-marketplace.json",
+  "name": "lucas-plugins",
+  "owner": {
+    "name": "Lucas",
+    "email": "aranlucas@gmail.com"
+  },
+  "metadata": {
+    "description": "Food & gym Agent Plugins — ai-shopping (Kroger/QFC) + workset (opengym2)",
+    "version": "0.1.0",
+    "pluginRoot": "./plugins",
+    "targets": ["claude-code", "cursor"]
+  },
+  "plugins": [
+    {
+      "name": "ai-shopping",
+      "source": "./plugins/ai-shopping",
+      "description": "Kroger/QFC shopping — product search, cart, lists, pantry, weekly deals, meal-planning context",
+      "version": "1.0.0",
+      "author": { "name": "Lucas", "email": "aranlucas@gmail.com" }
+    },
+    {
+      "name": "workset",
+      "source": "./plugins/workset",
+      "description": "workset training companion — workout planning, set-by-set logging, progress context",
+      "version": "1.0.0",
+      "author": { "name": "Lucas", "email": "aranlucas@gmail.com" }
+    }
+  ]
+}
