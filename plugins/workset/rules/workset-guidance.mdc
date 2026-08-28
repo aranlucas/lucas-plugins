@@ -1,0 +1,8 @@
+---
+description: Guidance for workout planning and training-log tasks in workset
+alwaysApply: false
+globs:
+  - "**/*"
+---
+
+workset-guidance: When the user asks to plan workouts, log sets, or review training progress, prefer the `workset-coach` skill. Treat recovery as an estimate from recent effective sets (not medical advice) and keep calendar semantics consistent: check = completed, neutral = planned, orange diamond = rescheduled.

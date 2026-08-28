@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+  <title id="title">workset</title>
+  <desc id="desc">Three-row set mark for workset training plugin.</desc>
+  <rect width="128" height="128" rx="20" fill="#0b1220" />
+  <g fill="#38bdf8">
+    <rect x="18" y="22" width="92" height="14" rx="7"/>
+    <rect x="18" y="46" width="92" height="14" rx="7"/>
+    <rect x="18" y="70" width="92" height="14" rx="7"/>
+  </g>
+  <rect x="18" y="98" width="36" height="10" rx="5" fill="#f97316"/>
+</svg>

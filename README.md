@@ -1,38 +1,30 @@
-# lucas-plugins
+# lucas-plugins — Cursor Marketplace
 
-Food & gym plugins by Lucas.
+Multi-plugin Cursor marketplace for food & gym:
 
-## Plugins
+- **ai-shopping** — Kroger/QFC shopping via remote MCP (`https://ai-meal-planner-mcp.aranlucas.workers.dev/mcp`), plus the `shopping-assistant` skill.
+- **workset** — workout planner & training log companion (`aranlucas/opengym2`), with the `workset-coach` skill.
 
-| Plugin | Stack | What it does | Link |
-|---|---|---|---|
-| **ai-shopping-mcp** | Cloudflare Workers + MCP | Kroger/QFC shopping — OAuth, product search, cart, lists, weekly deals, pantry/kitchen inventory. Hosted at `https://ai-meal-planner-mcp.aranlucas.workers.dev/mcp`. | [aranlucas/ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp) |
-| **opengym2** (workset) | Go + SQLite + React | Self-hosted workout planning & set-by-set training log — passkey auth, PWA. | [aranlucas/opengym2](https://github.com/aranlucas/opengym2) |
+## Layout
 
-## Quick start
-
-### ai-shopping-mcp
-
-```json
-{
-  "mcpServers": {
-    "ai-shopping-list": {
-      "command": "pnpm",
-      "args": ["dlx", "mcp-remote", "https://ai-meal-planner-mcp.aranlucas.workers.dev/mcp"]
-    }
-  }
-}
+```
+.cursor-plugin/marketplace.json
+plugins/ai-shopping/.cursor-plugin/plugin.json  + mcp.json, skills/, rules/
+plugins/workset/.cursor-plugin/plugin.json      + skills/, rules/
+scripts/validate-template.mjs
 ```
 
-### opengym2
+## Validate
 
 ```bash
-git clone https://github.com/aranlucas/opengym2.git
-cd opengym2
-cp .env.example .env
-go run ./cmd/opengym-api
+node scripts/validate-template.mjs
 ```
 
-## License
+## Publish
 
-Each plugin retains its original license — see the individual repos.
+Submit the repo at [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish). Each plugin is installable from **Customize → Plugins** once listed; community fallback is [cursor.directory](https://cursor.directory). See `docs/add-a-plugin.md`.
+
+## Sources
+
+- MCP server: [aranlucas/ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp)
+- Training app: [aranlucas/opengym2](https://github.com/aranlucas/opengym2)
