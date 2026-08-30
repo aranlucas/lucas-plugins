@@ -49,8 +49,11 @@ plugins/workset
 ## Validate
 
 ```bash
+python3 scripts/sync.py --check
+# validates schemas and fails if generated marketplace/plugin mirrors are stale
+
 python3 scripts/sync.py
-# checks marketplace paths, schema IDs, MCP transports, and skill frontmatter
+# validates and regenerates the generated marketplace/plugin mirrors
 ```
 
 Portable `plugin.json`/`mcp.json` `$schema` must match (§10.1): `https://agent-plugins.org/schemas/1.0.0/...`.
