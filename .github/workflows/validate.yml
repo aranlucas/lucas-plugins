@@ -1,0 +1,28 @@
+name: Validate plugins
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Check generated artifacts
+        run: python scripts/sync.py --check
+
+      - name: Run sync tests
+        run: python -m unittest discover --start-directory tests --pattern 'test_*.py'
