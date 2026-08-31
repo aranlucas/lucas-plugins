@@ -1,6 +1,6 @@
 # lucas-plugins — Agent Plugins + Marketplace
 
-[Agent Plugins](https://agent-plugins.org) v1.0 portable core for food & gym, plus a marketplace wrapper for distribution. The portable part (`plugin.json` + `mcp.json` + `skills/`) works in any v1 client; the marketplace files are the distribution layer the spec leaves to clients.
+[Agent Plugins](https://agent-plugins.org) v1.0 portable core for food, gym, and engineering, plus a marketplace wrapper for distribution. The portable part (`plugin.json` + `mcp.json` + `skills/`) works in any v1 client; the marketplace files are the distribution layer the spec leaves to clients.
 
 ## Plugins
 
@@ -8,6 +8,7 @@
 |---|---|---|---|---|
 | **ai-shopping** | `plugins/ai-shopping/` | `plugin.json`, `skills/shopping-assistant/SKILL.md` | `streamable-http` `https://ai-meal-planner-mcp.aranlucas.workers.dev/mcp` | [aranlucas/ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp) |
 | **workset** | `plugins/workset/` | `plugin.json`, `skills/workset-coach/SKILL.md` | `streamable-http` `https://opengym2.up.railway.app/mcp` | [aranlucas/opengym2](https://github.com/aranlucas/opengym2) |
+| **shipshape** | `plugins/shipshape/` | `plugin.json`, `skills/shipshape-maintainer/SKILL.md` | `streamable-http` `https://shipshape-mcp.aranlucas.workers.dev/mcp` | [aranlucas/shipshape-mcp](https://github.com/aranlucas/shipshape-mcp) |
 
 ## Why marketplace is separate
 
@@ -34,9 +35,10 @@ Claude Code:
 /plugin marketplace add aranlucas/lucas-plugins
 /plugin install ai-shopping@lucas-plugins
 /plugin install workset@lucas-plugins
+/plugin install shipshape@lucas-plugins
 ```
 
-Cursor: Dashboard → **Plugins → Add Marketplace → Import from Repo** → `aranlucas/lucas-plugins`, then enable `ai-shopping` / `workset`.
+Cursor: Dashboard → **Plugins → Add Marketplace → Import from Repo** → `aranlucas/lucas-plugins`, then enable `ai-shopping`, `workset`, or `shipshape`.
 
 **As direct plugin paths (no marketplace):**
 
@@ -44,6 +46,7 @@ Point your client at the plugin directory:
 ```
 plugins/ai-shopping
 plugins/workset
+plugins/shipshape
 ```
 
 ## Validate

@@ -1,0 +1,22 @@
+{
+  "name": "shipshape",
+  "version": "1.0.0",
+  "description": "Read-only GitHub portfolio maintenance \u2014 repository readiness, branch risk, delivery hygiene, security posture, and ranked action plans via MCP.",
+  "author": {
+    "name": "Lucas",
+    "email": "aranlucas@gmail.com"
+  },
+  "homepage": "https://github.com/aranlucas/shipshape-mcp",
+  "repository": "https://github.com/aranlucas/lucas-plugins",
+  "license": "MIT",
+  "keywords": [
+    "github",
+    "maintenance",
+    "repository",
+    "mcp",
+    "portfolio",
+    "security"
+  ],
+  "displayName": "shipshape",
+  "logo": "assets/logo.svg"
+}
