@@ -13,9 +13,14 @@ GENERATED_FILES = (
     Path(".claude-plugin/marketplace.json"),
     Path(".cursor-plugin/marketplace.json"),
     Path("plugins/ai-shopping/.claude-plugin/plugin.json"),
+    Path("plugins/ai-shopping/.mcp.json"),
     Path("plugins/ai-shopping/.cursor-plugin/plugin.json"),
     Path("plugins/workset/.claude-plugin/plugin.json"),
+    Path("plugins/workset/.mcp.json"),
     Path("plugins/workset/.cursor-plugin/plugin.json"),
+    Path("plugins/shipshape/.claude-plugin/plugin.json"),
+    Path("plugins/shipshape/.mcp.json"),
+    Path("plugins/shipshape/.cursor-plugin/plugin.json"),
 )
 
 
@@ -78,6 +83,37 @@ class SyncScriptTests(unittest.TestCase):
         self.assertEqual(repair.returncode, 0, repair.stderr)
         self.assertEqual(original, self.snapshot_generated_files())
         self.assertEqual(self.run_sync("--check").returncode, 0)
+
+    def test_claude_mcp_mirrors_match_portable_servers(self):
+        for plugin in ("ai-shopping", "workset", "shipshape"):
+            portable = json.loads((self.root / f"plugins/{plugin}/mcp.json").read_text())
+            claude = json.loads((self.root / f"plugins/{plugin}/.mcp.json").read_text())
+
+            self.assertNotIn("$schema", claude)
+            self.assertEqual(claude["mcpServers"], portable["mcpServers"])
+
+    def test_marketplace_sources_match_each_client_path_model(self):
+        claude = json.loads((self.root / ".claude-plugin/marketplace.json").read_text())
+        cursor = json.loads((self.root / ".cursor-plugin/marketplace.json").read_text())
+
+        self.assertEqual(claude["metadata"]["pluginRoot"], "./plugins")
+        self.assertEqual(
+            [plugin["source"] for plugin in claude["plugins"]],
+            [f"./plugins/{plugin['name']}" for plugin in claude["plugins"]],
+        )
+        self.assertEqual(
+            [plugin["source"] for plugin in cursor["plugins"]],
+            [plugin["name"] for plugin in cursor["plugins"]],
+        )
+
+    def test_claude_manifests_declare_the_default_skill_directory(self):
+        for plugin in ("ai-shopping", "workset", "shipshape"):
+            manifest = json.loads(
+                (self.root / f"plugins/{plugin}/.claude-plugin/plugin.json").read_text()
+            )
+            self.assertEqual(manifest["skills"], "./skills/")
+            portable = json.loads((self.root / f"plugins/{plugin}/plugin.json").read_text())
+            self.assertEqual(manifest["keywords"], portable["keywords"])
 
 
 if __name__ == "__main__":

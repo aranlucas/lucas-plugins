@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "shipshape": {
+      "type": "streamable-http",
+      "url": "https://shipshape-mcp.aranlucas.workers.dev/mcp"
+    }
+  }
+}

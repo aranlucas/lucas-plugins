@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "workset": {
+      "type": "streamable-http",
+      "url": "https://opengym2.up.railway.app/mcp"
+    }
+  }
+}

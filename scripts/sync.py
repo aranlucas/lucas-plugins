@@ -10,9 +10,13 @@ Source of truth:
   plugins/*/mcp.json
   plugins/*/skills/*/SKILL.md
 
-Claude marketplace paths require a leading ``./``. Cursor's importer expects
-bare paths and joins ``metadata.pluginRoot`` with each plugin's ``source``;
-emitting the Claude form there can make it request ``plugins/plugins/<name>``.
+Claude Code discovers plugin MCP servers from ``.mcp.json`` at the plugin
+root. The portable ``mcp.json`` remains the source of truth; this script emits
+the Claude-compatible mirror without the portable schema extension.
+
+Claude resolves explicit ``./plugins/<name>`` sources from the marketplace
+root. Cursor's importer instead expects bare names and joins them with
+``metadata.pluginRoot``; the two catalogs are emitted separately below.
 """
 
 import argparse
@@ -143,6 +147,11 @@ def validate_plugin(name, plugin_dir, errors):
 
 def build_artifacts(marketplace, resolved):
     """Build the files emitted by sync without writing any of them."""
+    # The canonical catalog is also the Claude Code catalog. Its sources are
+    # explicit paths from the marketplace root (for example,
+    # ``./plugins/shipshape``), which works on Claude Code versions that do not
+    # yet support ``metadata.pluginRoot``. Cursor gets a separate catalog below
+    # with bare names under its ``pluginRoot`` convention.
     artifacts = {
         pathlib.Path("marketplace.json"): marketplace,
         pathlib.Path(".claude-plugin/marketplace.json"): marketplace,
@@ -190,11 +199,28 @@ def build_artifacts(marketplace, resolved):
         claude_data = {
             key: value
             for key, value in common.items()
-            if key not in {"license", "keywords"} and value is not None
+            if value is not None
         }
+        if (plugin_dir / "skills").is_dir():
+            # Keep the component path explicit, matching Claude Code's
+            # first-party marketplace template while retaining the portable
+            # fixed-layout source of truth.
+            claude_data["skills"] = "./skills/"
         artifacts[
             plugin_dir.relative_to(ROOT) / ".claude-plugin/plugin.json"
         ] = claude_data
+
+        # Agent Plugins keeps the portable MCP schema in mcp.json, while Claude
+        # Code loads plugin servers from the root-level .mcp.json convention.
+        # Keep the server definitions identical and omit the portable-only
+        # $schema key so Claude receives its native config shape.
+        mcp_path = plugin_dir / "mcp.json"
+        if mcp_path.is_file():
+            portable_mcp = load(mcp_path)
+            claude_mcp = {
+                key: value for key, value in portable_mcp.items() if key != "$schema"
+            }
+            artifacts[plugin_dir.relative_to(ROOT) / ".mcp.json"] = claude_mcp
 
         existing_path = plugin_dir / ".cursor-plugin/plugin.json"
         existing = load(existing_path) if existing_path.exists() else {}
@@ -294,7 +320,9 @@ def main(argv=None):
         prefix = f"{plugin_root}/"
         if source.startswith(prefix):
             source = source[len(prefix) :]
-        entry["source"] = f"./{source}"
+        # Keep canonical/Claude sources relative to the marketplace root. The
+        # Cursor artifact derives a bare source from ``resolved`` below.
+        entry["source"] = f"./{plugin_root}/{source}"
 
         plugin_dir = ROOT / plugin_root / source
         try:

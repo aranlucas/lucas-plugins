@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Food, gym & engineering Agent Plugins \u2014 ai-shopping, workset, and shipshape",
-    "version": "0.2.0",
+    "version": "0.3.0",
     "pluginRoot": "plugins"
   },
   "plugins": [
@@ -14,7 +14,7 @@
       "name": "ai-shopping",
       "source": "ai-shopping",
       "description": "Kroger/QFC shopping \u2014 product search, cart, lists, pantry, weekly deals, meal-planning context",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "Lucas",
         "email": "aranlucas@gmail.com"
@@ -24,7 +24,7 @@
       "name": "workset",
       "source": "workset",
       "description": "workset training companion \u2014 workout planning, set-by-set logging, progress context",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "Lucas",
         "email": "aranlucas@gmail.com"
@@ -34,7 +34,7 @@
       "name": "shipshape",
       "source": "shipshape",
       "description": "Read-only GitHub portfolio maintenance \u2014 repository readiness, branch risk, delivery hygiene, security posture, and ranked action plans",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "Lucas",
         "email": "aranlucas@gmail.com"
