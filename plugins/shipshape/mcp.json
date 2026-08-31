@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "shipshape": {
+      "type": "streamable-http",
+      "url": "https://shipshape-mcp.aranlucas.workers.dev/mcp"
+    }
+  }
+}

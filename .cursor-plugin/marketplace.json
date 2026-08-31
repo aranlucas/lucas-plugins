@@ -5,8 +5,8 @@
     "email": "aranlucas@gmail.com"
   },
   "metadata": {
-    "description": "Food & gym Agent Plugins \u2014 ai-shopping (Kroger/QFC) + workset (opengym2)",
-    "version": "0.1.0",
+    "description": "Food, gym & engineering Agent Plugins \u2014 ai-shopping, workset, and shipshape",
+    "version": "0.2.0",
     "pluginRoot": "plugins"
   },
   "plugins": [
@@ -24,6 +24,16 @@
       "name": "workset",
       "source": "workset",
       "description": "workset training companion \u2014 workout planning, set-by-set logging, progress context",
+      "version": "1.0.0",
+      "author": {
+        "name": "Lucas",
+        "email": "aranlucas@gmail.com"
+      }
+    },
+    {
+      "name": "shipshape",
+      "source": "shipshape",
+      "description": "Read-only GitHub portfolio maintenance \u2014 repository readiness, branch risk, delivery hygiene, security posture, and ranked action plans",
       "version": "1.0.0",
       "author": {
         "name": "Lucas",
