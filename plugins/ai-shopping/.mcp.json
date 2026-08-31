@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "ai-shopping": {
+      "type": "streamable-http",
+      "url": "https://ai-meal-planner-mcp.aranlucas.workers.dev/mcp"
+    }
+  }
+}

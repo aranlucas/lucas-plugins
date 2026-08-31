@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "ai-shopping",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Kroger/QFC shopping — product search, cart, shopping lists, pantry, weekly deals, and meal-planning context via MCP.",
   "author": {
     "name": "Lucas",

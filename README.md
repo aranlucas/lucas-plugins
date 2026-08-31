@@ -22,6 +22,7 @@ plugins/*/skills/*/SKILL.md           # portable skills
 .claude-plugin/marketplace.json       # generated — Claude Code
 .cursor-plugin/marketplace.json       # generated — Cursor
 plugins/*/.claude-plugin/plugin.json  # generated mirrors
+plugins/*/.mcp.json                   # generated — Claude Code MCP config
 plugins/*/.cursor-plugin/plugin.json  # generated mirrors
 scripts/sync.py                       # validate + regenerate
 ```
@@ -37,6 +38,21 @@ Claude Code:
 /plugin install workset@lucas-plugins
 /plugin install shipshape@lucas-plugins
 ```
+
+From a terminal, the equivalent commands are:
+
+```bash
+claude plugin marketplace add aranlucas/lucas-plugins
+claude plugin install shipshape@lucas-plugins
+```
+
+Claude Code loads each plugin's generated root-level `.mcp.json`; the
+portable `mcp.json` remains the single source of truth. OAuth-backed servers
+prompt for authorization the first time you use `/mcp`.
+
+The Claude marketplace uses explicit `./plugins/<name>` sources (the same
+layout used by Claude's marketplace template). Cursor receives a separate
+catalog with bare plugin names under its `pluginRoot`.
 
 Cursor: Dashboard → **Plugins → Add Marketplace → Import from Repo** → `aranlucas/lucas-plugins`, then enable `ai-shopping`, `workset`, or `shipshape`.
 

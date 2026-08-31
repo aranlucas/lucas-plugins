@@ -1,11 +1,20 @@
 {
   "name": "workset",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "workset training companion \u2014 workout planning, set-by-set logging, and progress context for opengym2.",
   "author": {
     "name": "Lucas",
     "email": "aranlucas@gmail.com"
   },
   "homepage": "https://github.com/aranlucas/opengym2",
-  "repository": "https://github.com/aranlucas/lucas-plugins"
+  "repository": "https://github.com/aranlucas/lucas-plugins",
+  "license": "ISC",
+  "keywords": [
+    "fitness",
+    "workout",
+    "gym",
+    "training",
+    "workset"
+  ],
+  "skills": "./skills/"
 }

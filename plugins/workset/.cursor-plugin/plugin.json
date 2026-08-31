@@ -1,6 +1,6 @@
 {
   "name": "workset",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "workset training companion \u2014 workout planning, set-by-set logging, and progress context for opengym2.",
   "author": {
     "name": "Lucas",

@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "shipshape",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Read-only GitHub portfolio maintenance — repository readiness, branch risk, delivery hygiene, security posture, and ranked action plans via MCP.",
   "author": {
     "name": "Lucas",
