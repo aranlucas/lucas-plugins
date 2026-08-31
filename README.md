@@ -1,78 +1,41 @@
-# lucas-plugins — Agent Plugins + Marketplace
+# Lucas Plugins
 
-[Agent Plugins](https://agent-plugins.org) v1.0 portable core for food, gym, and engineering, plus a marketplace wrapper for distribution. The portable part (`plugin.json` + `mcp.json` + `skills/`) works in any v1 client; the marketplace files are the distribution layer the spec leaves to clients.
+A small collection of [Agent Plugins](https://agent-plugins.org) for Claude Code, Cursor, and other compatible clients.
 
 ## Plugins
 
-| Plugin | Directory | Portable core | MCP | Upstream |
-|---|---|---|---|---|
-| **ai-shopping** | `plugins/ai-shopping/` | `plugin.json`, `skills/shopping-assistant/SKILL.md` | `streamable-http` `https://ai-meal-planner-mcp.aranlucas.workers.dev/mcp` | [aranlucas/ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp) |
-| **workset** | `plugins/workset/` | `plugin.json`, `skills/workset-coach/SKILL.md` | `streamable-http` `https://opengym2.up.railway.app/mcp` | [aranlucas/opengym2](https://github.com/aranlucas/opengym2) |
-| **shipshape** | `plugins/shipshape/` | `plugin.json`, `skills/shipshape-maintainer/SKILL.md` | `streamable-http` `https://shipshape-mcp.aranlucas.workers.dev/mcp` | [aranlucas/shipshape-mcp](https://github.com/aranlucas/shipshape-mcp) |
-
-## Why marketplace is separate
-
-Spec (§4–§10) defines only the plugin package (`plugin.json` at each plugin root, fixed `mcp.json`/`skills/`). It explicitly does **not** define the marketplace — that is client distribution. This repo keeps the portable core as source of truth and generates the client marketplaces:
-
-```
-marketplace.json                      # source of truth (canonical catalog)
-plugins/*/plugin.json                 # portable manifests (edit these)
-plugins/*/mcp.json                    # portable MCP (edit these)
-plugins/*/skills/*/SKILL.md           # portable skills
-.claude-plugin/marketplace.json       # generated — Claude Code
-.cursor-plugin/marketplace.json       # generated — Cursor
-plugins/*/.claude-plugin/plugin.json  # generated mirrors
-plugins/*/.mcp.json                   # generated — Claude Code MCP config
-plugins/*/.cursor-plugin/plugin.json  # generated mirrors
-scripts/sync.py                       # validate + regenerate
-```
+| Plugin | What it does | Source |
+| --- | --- | --- |
+| [ai-shopping](plugins/ai-shopping) | Search Kroger/QFC, manage your cart and lists, and plan meals. | [ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp) |
+| [workset](plugins/workset) | Plan workouts, log sets, and review training progress. | [Set and Signal](https://github.com/aranlucas/opengym2) |
+| [shipshape](plugins/shipshape) | Review public GitHub repositories and get a ranked maintenance plan. | [shipshape-mcp](https://github.com/aranlucas/shipshape-mcp) |
 
 ## Install
 
-**As a marketplace (picker):**
+### Claude Code
 
-Claude Code:
-```
+Add the marketplace, then install the plugin you want:
+
+```text
 /plugin marketplace add aranlucas/lucas-plugins
 /plugin install ai-shopping@lucas-plugins
-/plugin install workset@lucas-plugins
-/plugin install shipshape@lucas-plugins
 ```
 
-From a terminal, the equivalent commands are:
+Replace `ai-shopping` with `workset` or `shipshape` to install another plugin. OAuth-backed plugins will ask you to sign in the first time you use them.
 
-```bash
-claude plugin marketplace add aranlucas/lucas-plugins
-claude plugin install shipshape@lucas-plugins
-```
+### Cursor
 
-Claude Code loads each plugin's generated root-level `.mcp.json`; the
-portable `mcp.json` remains the single source of truth. OAuth-backed servers
-prompt for authorization the first time you use `/mcp`.
+Open **Settings → Plugins → Add Marketplace → Import from Repo**, enter `aranlucas/lucas-plugins`, and enable the plugins you want.
 
-The Claude marketplace uses explicit `./plugins/<name>` sources (the same
-layout used by Claude's marketplace template). Cursor receives a separate
-catalog with bare plugin names under its `pluginRoot`.
+### Other clients
 
-Cursor: Dashboard → **Plugins → Add Marketplace → Import from Repo** → `aranlucas/lucas-plugins`, then enable `ai-shopping`, `workset`, or `shipshape`.
+Use a plugin directory directly, such as `plugins/ai-shopping`. Each plugin follows the Agent Plugins v1 format.
 
-**As direct plugin paths (no marketplace):**
+## Development
 
-Point your client at the plugin directory:
-```
-plugins/ai-shopping
-plugins/workset
-plugins/shipshape
-```
-
-## Validate
+Edit the files in `plugins/` or `marketplace.json`, then validate and regenerate the client-specific files:
 
 ```bash
 python3 scripts/sync.py --check
-# validates schemas and fails if generated marketplace/plugin mirrors are stale
-
 python3 scripts/sync.py
-# validates and regenerates the generated marketplace/plugin mirrors
 ```
-
-Portable `plugin.json`/`mcp.json` `$schema` must match (§10.1): `https://agent-plugins.org/schemas/1.0.0/...`.
