@@ -78,7 +78,7 @@ def parse_frontmatter(path):
     return values
 
 
-def validate_plugin(name, plugin_dir, errors):
+def validate_plugin(name, plugin_dir, errors, entry):
     manifest_path = plugin_dir / "plugin.json"
     mcp_path = plugin_dir / "mcp.json"
 
@@ -92,6 +92,16 @@ def validate_plugin(name, plugin_dir, errors):
         errors.append(f"{manifest_path.relative_to(ROOT)}: invalid JSON: {exc}")
         return
 
+    if not isinstance(manifest, dict):
+        errors.append(f"{manifest_path.relative_to(ROOT)}: must be an object")
+        return
+    for field in ("version", "description"):
+        if not isinstance(manifest.get(field), str) or not manifest[field].strip():
+            errors.append(f"{manifest_path.relative_to(ROOT)}: {field} is required")
+    if entry.get("version") != manifest.get("version"):
+        errors.append(f"{manifest_path.relative_to(ROOT)}: version must match marketplace entry")
+    if not (plugin_dir / "assets/logo.svg").is_file():
+        errors.append(f"{plugin_dir.relative_to(ROOT)}/assets/logo.svg: missing Cursor logo")
     if manifest.get("$schema") != PLUGIN_SCHEMA:
         errors.append(f"{manifest_path.relative_to(ROOT)}: expected $schema {PLUGIN_SCHEMA}")
     if manifest.get("name") != name:
@@ -106,6 +116,9 @@ def validate_plugin(name, plugin_dir, errors):
             errors.append(f"{mcp_path.relative_to(ROOT)}: invalid JSON: {exc}")
             mcp = None
 
+        if mcp is not None and not isinstance(mcp, dict):
+            errors.append(f"{mcp_path.relative_to(ROOT)}: must be an object")
+            mcp = None
         if mcp is not None:
             if mcp.get("$schema") != MCP_SCHEMA:
                 errors.append(f"{mcp_path.relative_to(ROOT)}: expected $schema {MCP_SCHEMA}")
@@ -119,6 +132,13 @@ def validate_plugin(name, plugin_dir, errors):
                         errors.append(f"{label} must be an object")
                         continue
                     server_type = server.get("type")
+                    if server_type == "stdio":
+                        command = server.get("command")
+                        if not isinstance(command, str) or not command.strip():
+                            errors.append(f"{label}.command must be a non-empty string")
+                        args = server.get("args", [])
+                        if not isinstance(args, list) or not all(isinstance(arg, str) for arg in args):
+                            errors.append(f"{label}.args must be an array of strings")
                     if server_type not in MCP_TYPES:
                         errors.append(
                             f"{label}.type must be one of {sorted(MCP_TYPES)}, got {server_type!r}"
@@ -131,6 +151,9 @@ def validate_plugin(name, plugin_dir, errors):
 
     skills_dir = plugin_dir / "skills"
     if skills_dir.exists():
+        for directory in sorted(skills_dir.iterdir()):
+            if directory.is_dir() and not (directory / "SKILL.md").is_file():
+                errors.append(f"{directory.relative_to(ROOT)}/SKILL.md: missing")
         for skill in sorted(skills_dir.glob("*/SKILL.md")):
             try:
                 frontmatter = parse_frontmatter(skill)
@@ -336,7 +359,12 @@ def main(argv=None):
             )
             continue
         resolved.append((name, entry, source, plugin_dir))
-        validate_plugin(name, plugin_dir, errors)
+        validate_plugin(name, plugin_dir, errors, entry)
+
+    registered = {plugin_dir.resolve() for _, _, _, plugin_dir in resolved}
+    for manifest_path in sorted((ROOT / plugin_root).glob("*/plugin.json")):
+        if manifest_path.parent.resolve() not in registered:
+            errors.append(f"{manifest_path.relative_to(ROOT)}: plugin is not registered in marketplace")
 
     if errors:
         for error in errors:

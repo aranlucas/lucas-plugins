@@ -1,0 +1,21 @@
+{
+  "name": "travel",
+  "version": "1.0.0",
+  "description": "Travel planning with trvl - flights, hotels, ground transport, rental cars, and destinations.",
+  "author": {
+    "name": "Lucas",
+    "email": "aranlucas@gmail.com"
+  },
+  "homepage": "https://github.com/aranlucas/trvl",
+  "repository": "https://github.com/aranlucas/lucas-plugins",
+  "license": "MIT",
+  "keywords": [
+    "travel",
+    "flights",
+    "hotels",
+    "transport",
+    "trvl"
+  ],
+  "displayName": "travel",
+  "logo": "assets/logo.svg"
+}
