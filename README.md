@@ -6,7 +6,7 @@ A small collection of [Agent Plugins](https://agent-plugins.org) for Claude Code
 
 | Plugin | What it does | Source |
 | --- | --- | --- |
-| [ai-shopping](plugins/ai-shopping) | Search Kroger/QFC, manage your cart and lists, and plan meals. | [ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp) |
+| [groceries](plugins/groceries) | Search Kroger/QFC, manage your cart and lists, and plan meals. | [ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp) |
 | [workset](plugins/workset) | Plan workouts, log sets, and review training progress. | [Set and Signal](https://github.com/aranlucas/opengym2) |
 | [shipshape](plugins/shipshape) | Review public GitHub repositories and get a ranked maintenance plan. | [shipshape-mcp](https://github.com/aranlucas/shipshape-mcp) |
 | [travel](plugins/travel) | Search flights, hotels, ground transport, rental cars, and destinations. | [trvl](https://github.com/aranlucas/trvl) |
@@ -20,10 +20,10 @@ Add the marketplace, then install the plugin you want:
 
 ```text
 /plugin marketplace add aranlucas/lucas-plugins
-/plugin install ai-shopping@lucas-plugins
+/plugin install groceries@lucas-plugins
 ```
 
-Replace `ai-shopping` with `workset`, `shipshape`, `travel`, or `system-design-companion` to install another plugin. OAuth-backed plugins will ask you to sign in the first time you use them. Travel requires the [trvl CLI on your client's PATH](plugins/travel#prerequisite).
+Replace `groceries` with `workset`, `shipshape`, `travel`, or `system-design-companion` to install another plugin. OAuth-backed plugins will ask you to sign in the first time you use them. Travel requires the [trvl CLI on your client's PATH](plugins/travel#prerequisite).
 
 ### Cursor
 
@@ -31,7 +31,7 @@ Open **Settings → Plugins → Add Marketplace → Import from Repo**, enter `a
 
 ### Other clients
 
-Use a plugin directory directly, such as `plugins/ai-shopping`. Each plugin follows the Agent Plugins v1 format.
+Use a plugin directory directly, such as `plugins/groceries`. Each plugin follows the Agent Plugins v1 format.
 
 ## Development
 

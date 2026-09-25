@@ -16,10 +16,10 @@
   },
   "plugins": [
     {
-      "name": "ai-shopping",
-      "source": "./plugins/ai-shopping",
+      "name": "groceries",
+      "source": "./plugins/groceries",
       "description": "Kroger/QFC shopping \u2014 product search, cart, lists, pantry, weekly deals, meal-planning context",
-      "version": "1.1.0",
+      "version": "2.0.0",
       "author": {
         "name": "Lucas",
         "email": "aranlucas@gmail.com"

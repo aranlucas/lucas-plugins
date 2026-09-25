@@ -12,7 +12,7 @@ installation or remote MCP service audit.
   custom display names, and `--check` accepts arbitrary edits to those names.
   Move this metadata into a maintained client configuration file before making
   generated artifacts disposable.
-- **P2: License metadata is inconsistent.** `plugins/ai-shopping/plugin.json`
+- **P2: License metadata is inconsistent.** `plugins/groceries/plugin.json`
   and `plugins/workset/plugin.json` declare ISC, while the root `LICENSE` is MIT
   and neither plugin includes an ISC license file. Clarify whether the metadata
   describes this plugin package or its upstream service, then align the package

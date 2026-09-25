@@ -7,7 +7,7 @@ description: Kroger/QFC grocery shopping — search products, manage shopping li
 
 Help the user shop at Kroger/QFC via the connected MCP.
 
-## Tools available (via MCP `ai-shopping`)
+## Tools available (via MCP `groceries`)
 
 - Discovery: `search_stores`, `get_store`, `set_preferred_store`
 - Search: `search_products` (1–10 terms in parallel), `get_product`

@@ -250,7 +250,7 @@ def build_artifacts(marketplace, resolved):
         cursor_data = {
             **{key: value for key, value in common.items() if value is not None},
             "displayName": existing.get("displayName")
-            or ("AI Shopping (Kroger/QFC)" if name == "ai-shopping" else name),
+            or ("Groceries (Kroger/QFC)" if name == "groceries" else name),
             "logo": "assets/logo.svg",
         }
         artifacts[
