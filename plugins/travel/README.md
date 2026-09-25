@@ -13,16 +13,13 @@ hotels, ground transport, rental cars, destinations, and trip plans.
 In Cursor, enable `travel` from the `aranlucas/lucas-plugins` marketplace.
 Other Agent Plugins v1 clients can use `plugins/travel` directly.
 
-## Connection and authentication
+## Connection
 
 The plugin connects over Streamable HTTP to the hosted MCP server:
 
 `https://trvl-production.up.railway.app/mcp`
 
-No local trvl CLI or Go installation is needed. The server requires a bearer
-token. Set `TRVL_MCP_TOKEN` in the MCP client's environment to a token issued
-by the server operator. The plugin sends it in the `Authorization` header.
-Never commit the token to plugin files.
+No local trvl CLI or Go installation is needed.
 
 ## Contents
 

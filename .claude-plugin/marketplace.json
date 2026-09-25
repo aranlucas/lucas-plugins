@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Food, gym, engineering, and travel Agent Plugins",
-    "version": "0.5.1",
+    "version": "0.5.2",
     "pluginRoot": "./plugins",
     "targets": [
       "claude-code",
@@ -49,7 +49,7 @@
       "name": "travel",
       "source": "./plugins/travel",
       "description": "Travel planning with trvl - flights, hotels, ground transport, rental cars, and destinations",
-      "version": "1.1.0",
+      "version": "1.1.1",
       "author": {
         "name": "Lucas",
         "email": "aranlucas@gmail.com"

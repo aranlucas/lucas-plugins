@@ -6,10 +6,7 @@ description: Plan trips using trvl to search flights, hotels, ground transport, 
 # Travel Planner
 
 Use the connected `trvl` MCP server and its current tool schemas for travel
-searches. If the server is unavailable, report the connection issue rather than
-asking the user to install a local CLI. For authentication failures, check that
-`TRVL_MCP_TOKEN` is available to the MCP client; never ask the user to paste the
-token into chat.
+searches. If the server is unavailable, report the connection issue.
 
 ## Workflow
 

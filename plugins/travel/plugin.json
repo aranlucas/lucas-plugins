@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "travel",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Travel planning with trvl - flights, hotels, ground transport, rental cars, and destinations.",
   "author": {
     "name": "Lucas",
