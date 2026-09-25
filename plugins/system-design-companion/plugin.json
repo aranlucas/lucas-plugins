@@ -1,0 +1,20 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "system-design-companion",
+  "version": "1.0.0",
+  "description": "Collaborative system design canvas - create diagrams, edit architecture, and review designs via MCP.",
+  "author": {
+    "name": "Lucas",
+    "email": "aranlucas@gmail.com"
+  },
+  "homepage": "https://system-design-companion.aranlucas.workers.dev",
+  "repository": "https://github.com/aranlucas/lucas-plugins",
+  "license": "MIT",
+  "keywords": [
+    "system-design",
+    "architecture",
+    "diagrams",
+    "excalidraw",
+    "mcp"
+  ]
+}

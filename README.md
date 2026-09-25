@@ -10,6 +10,7 @@ A small collection of [Agent Plugins](https://agent-plugins.org) for Claude Code
 | [workset](plugins/workset) | Plan workouts, log sets, and review training progress. | [Set and Signal](https://github.com/aranlucas/opengym2) |
 | [shipshape](plugins/shipshape) | Review public GitHub repositories and get a ranked maintenance plan. | [shipshape-mcp](https://github.com/aranlucas/shipshape-mcp) |
 | [travel](plugins/travel) | Search flights, hotels, ground transport, rental cars, and destinations. | [trvl](https://github.com/aranlucas/trvl) |
+| [system-design-companion](plugins/system-design-companion) | Collaborate on system architecture diagrams and review designs. | [System Design Companion](https://system-design-companion.aranlucas.workers.dev) |
 
 ## Install
 
@@ -22,7 +23,7 @@ Add the marketplace, then install the plugin you want:
 /plugin install ai-shopping@lucas-plugins
 ```
 
-Replace `ai-shopping` with `workset`, `shipshape`, or `travel` to install another plugin. OAuth-backed plugins will ask you to sign in the first time you use them. Travel requires the [trvl CLI on your client's PATH](plugins/travel#prerequisite).
+Replace `ai-shopping` with `workset`, `shipshape`, `travel`, or `system-design-companion` to install another plugin. OAuth-backed plugins will ask you to sign in the first time you use them. Travel requires the [trvl CLI on your client's PATH](plugins/travel#prerequisite).
 
 ### Cursor
 

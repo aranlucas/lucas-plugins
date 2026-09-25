@@ -1,0 +1,42 @@
+{
+  "name": "system-design-companion",
+  "version": "1.0.0",
+  "description": "Collaborative system design canvas - create diagrams, edit architecture, and review designs via MCP.",
+  "author": {
+    "name": "Lucas",
+    "email": "aranlucas@gmail.com"
+  },
+  "homepage": "https://system-design-companion.aranlucas.workers.dev",
+  "repository": "https://github.com/aranlucas/lucas-plugins",
+  "license": "MIT",
+  "keywords": [
+    "system-design",
+    "architecture",
+    "diagrams",
+    "excalidraw",
+    "mcp"
+  ],
+  "mcpServers": {
+    "system-design-companion": {
+      "type": "http",
+      "url": "https://system-design-companion.aranlucas.workers.dev/mcp"
+    }
+  },
+  "interface": {
+    "displayName": "System Design Companion",
+    "shortDescription": "Draw and review system architecture together.",
+    "longDescription": "Collaborative system design canvas - create diagrams, edit architecture, and review designs via MCP.",
+    "developerName": "Lucas",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "Create a system design diagram.",
+      "Join my diagram and review the architecture."
+    ],
+    "logo": "./assets/logo.svg"
+  },
+  "skills": "./skills/"
+}

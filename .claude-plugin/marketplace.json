@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Food, gym, engineering, and travel Agent Plugins",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "pluginRoot": "./plugins",
     "targets": [
       "claude-code",
@@ -49,6 +49,16 @@
       "name": "travel",
       "source": "./plugins/travel",
       "description": "Travel planning with trvl - flights, hotels, ground transport, rental cars, and destinations",
+      "version": "1.0.0",
+      "author": {
+        "name": "Lucas",
+        "email": "aranlucas@gmail.com"
+      }
+    },
+    {
+      "name": "system-design-companion",
+      "source": "./plugins/system-design-companion",
+      "description": "Collaborative system design canvas - create diagrams, edit architecture, and review designs via MCP.",
       "version": "1.0.0",
       "author": {
         "name": "Lucas",
