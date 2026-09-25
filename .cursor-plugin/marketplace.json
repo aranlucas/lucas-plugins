@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Food, gym, engineering, and travel Agent Plugins",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "pluginRoot": "plugins"
   },
   "plugins": [
@@ -44,7 +44,7 @@
       "name": "travel",
       "source": "travel",
       "description": "Travel planning with trvl - flights, hotels, ground transport, rental cars, and destinations",
-      "version": "1.0.0",
+      "version": "1.1.0",
       "author": {
         "name": "Lucas",
         "email": "aranlucas@gmail.com"

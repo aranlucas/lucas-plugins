@@ -3,20 +3,6 @@
 Travel planning with [trvl](https://github.com/aranlucas/trvl): search flights,
 hotels, ground transport, rental cars, destinations, and trip plans.
 
-## Prerequisite
-
-Install Go and the trvl CLI before enabling the plugin:
-
-```bash
-go install github.com/aranlucas/trvl/cmd/trvl@latest
-trvl mcp --help
-```
-
-The `trvl` executable must be on the MCP client's PATH. Go normally installs it
-in `$(go env GOPATH)/bin` unless `GOBIN` is set. Restart the client after updating
-its PATH. Provider credentials are optional and depend on the searches you use;
-see the trvl source documentation for setup.
-
 ## Install
 
 ```text
@@ -27,10 +13,18 @@ see the trvl source documentation for setup.
 In Cursor, enable `travel` from the `aranlucas/lucas-plugins` marketplace.
 Other Agent Plugins v1 clients can use `plugins/travel` directly.
 
+## Connection and authentication
+
+The plugin connects over Streamable HTTP to the hosted MCP server:
+
+`https://trvl-production.up.railway.app/mcp`
+
+No local trvl CLI or Go installation is needed. The server requires a bearer
+token. Set `TRVL_MCP_TOKEN` in the MCP client's environment to a token issued
+by the server operator. The plugin sends it in the `Authorization` header.
+Never commit the token to plugin files.
+
 ## Contents
 
-- MCP server: `trvl`, launched locally over stdio with `trvl mcp`.
+- MCP server: `trvl`, connected to the hosted endpoint over Streamable HTTP.
 - Skill: `travel-planner` in `skills/travel-planner/SKILL.md`.
-
-The plugin launches the server itself; a separate `trvl mcp install` is not
-needed and could register a duplicate server.

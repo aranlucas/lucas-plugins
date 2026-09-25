@@ -2,9 +2,11 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
   "mcpServers": {
     "trvl": {
-      "type": "stdio",
-      "command": "trvl",
-      "args": ["mcp"]
+      "type": "streamable-http",
+      "url": "https://trvl-production.up.railway.app/mcp",
+      "headers": {
+        "Authorization": "Bearer ${TRVL_MCP_TOKEN}"
+      }
     }
   }
 }
