@@ -23,7 +23,7 @@ Add the marketplace, then install the plugin you want:
 /plugin install groceries@lucas-plugins
 ```
 
-Replace `groceries` with `workset`, `shipshape`, `travel`, or `system-design-companion` to install another plugin. OAuth-backed plugins will ask you to sign in the first time you use them. Travel requires the [trvl CLI on your client's PATH](plugins/travel#prerequisite).
+Replace `groceries` with `workset`, `shipshape`, `travel`, or `system-design-companion` to install another plugin. OAuth-backed plugins will ask you to sign in the first time you use them.
 
 ### Cursor
 
