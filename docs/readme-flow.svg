@@ -7,18 +7,18 @@
   <g font-family="system-ui,sans-serif">
     <rect x="64" y="160" width="248" height="150" rx="18" fill="#262626" stroke="#f5b7d2" stroke-width="2"/>
     <text x="88" y="201" fill="#f5b7d2" font-size="14" font-weight="700">CLIENTS</text>
-    <text x="88" y="238" fill="#fafafa" font-size="20">Claude · Cursor · Codex</text>
+    <text x="88" y="238" fill="#fafafa" font-size="18">Claude · Cursor · Codex</text>
     <text x="88" y="270" fill="#d4d4d4" font-size="15">one plugin install surface</text>
     <path d="M324 235h74" stroke="#f5b7d2" stroke-width="3"/><path d="m390 225 14 10-14 10" fill="none" stroke="#f5b7d2" stroke-width="3"/>
     <rect x="414" y="160" width="248" height="150" rx="18" fill="#262626" stroke="#a7f3d0" stroke-width="2"/>
     <text x="438" y="201" fill="#a7f3d0" font-size="14" font-weight="700">MANIFESTS</text>
-    <text x="438" y="238" fill="#fafafa" font-size="20">marketplace + plugin.json</text>
+    <text x="438" y="238" fill="#fafafa" font-size="19">marketplace + plugin</text>
     <text x="438" y="270" fill="#d4d4d4" font-size="15">mcp.json · skill · logo</text>
     <path d="M674 235h74" stroke="#a7f3d0" stroke-width="3"/><path d="m740 225 14 10-14 10" fill="none" stroke="#a7f3d0" stroke-width="3"/>
     <rect x="764" y="160" width="248" height="150" rx="18" fill="#262626" stroke="#fcd34d" stroke-width="2"/>
     <text x="788" y="201" fill="#fcd34d" font-size="14" font-weight="700">HOSTED TOOLS</text>
     <text x="788" y="238" fill="#fafafa" font-size="20">MCP service + skill</text>
-    <text x="788" y="270" fill="#d4d4d4" font-size="15">groceries · travel · design · more</text>
+    <text x="788" y="270" fill="#d4d4d4" font-size="15">groceries · travel · design</text>
   </g>
   <text x="64" y="366" fill="#a3a3a3" font-family="system-ui,sans-serif" font-size="15">scripts/sync.py keeps generated client catalogs aligned with the source manifests.</text>
 </svg>
