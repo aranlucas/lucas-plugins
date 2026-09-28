@@ -1,41 +1,57 @@
 # Lucas Plugins
 
-A small collection of [Agent Plugins](https://agent-plugins.org) for Claude Code, Cursor, and other compatible clients.
+## Give your coding agent a better weekend.
 
-## Plugins
+[![Validation](https://img.shields.io/github/actions/workflow/status/aranlucas/lucas-plugins/validate.yml?branch=main&label=manifests)](https://github.com/aranlucas/lucas-plugins/actions/workflows/validate.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-| Plugin | What it does | Source |
-| --- | --- | --- |
-| [groceries](plugins/groceries) | Search Kroger/QFC, manage your cart and lists, and plan meals. | [ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp) |
-| [workset](plugins/workset) | Plan workouts, log sets, and review training progress. | [Set and Signal](https://github.com/aranlucas/opengym2) |
-| [shipshape](plugins/shipshape) | Review public GitHub repositories and get a ranked maintenance plan. | [shipshape-mcp](https://github.com/aranlucas/shipshape-mcp) |
-| [travel](plugins/travel) | Search flights, hotels, ground transport, rental cars, and destinations. | [trvl](https://github.com/aranlucas/trvl) |
-| [system-design-companion](plugins/system-design-companion) | Collaborate on system architecture diagrams and review designs. | [System Design Companion](https://system-design-companion.aranlucas.workers.dev) |
+Lucas Plugins is a portable Agent Plugins v1 marketplace for the hosted tools I use from Claude Code, Cursor, Codex, and other compatible clients. Install the grocery plugin before meal planning, the workset plugin after the gym, or Shipshape when a repository needs a release-readiness pass. Five remote MCP connections arrive with client-specific manifests and, where useful, a matching skill.
+
+## Available plugins
+
+| Plugin | Purpose | Hosted connection | Skill |
+| --- | --- | --- | --- |
+| [`groceries`](plugins/groceries) | Kroger/QFC product search, carts, lists, pantry, deals, and meal-planning context. | `ai-meal-planner-mcp.aranlucas.workers.dev/mcp` | `shopping-assistant` |
+| [`workset`](plugins/workset) | Workout planning, set-by-set logging, and training progress context. | `opengym2.up.railway.app/mcp` | `workset-coach` |
+| [`shipshape`](plugins/shipshape) | Read-only GitHub portfolio readiness, branch risk, delivery hygiene, security posture, and ranked action plans. | `shipshape-mcp.aranlucas.workers.dev/mcp` | `shipshape-maintainer` |
+| [`travel`](plugins/travel) | Flight, hotel, ground transport, rental car, destination, and trip planning. | `trvl-production.up.railway.app/mcp` | `travel-planner` |
+| [`system-design-companion`](plugins/system-design-companion) | Shared Excalidraw system-design diagrams and architecture review. | `system-design-companion.aranlucas.workers.dev/mcp` | `system-design-companion` |
+
+The remote endpoints are configured in each plugin’s `mcp.json`; no local server is started by this repository. The individual plugin READMEs document OAuth or other service-specific behavior.
 
 ## Install
 
 ### Claude Code
 
-Add the marketplace, then install the plugin you want:
+Add this repository as a marketplace, then install one or more plugins:
 
 ```text
 /plugin marketplace add aranlucas/lucas-plugins
 /plugin install groceries@lucas-plugins
 ```
 
-Replace `groceries` with `workset`, `shipshape`, `travel`, or `system-design-companion` to install another plugin. OAuth-backed plugins will ask you to sign in the first time you use them.
+Replace `groceries` with `workset`, `shipshape`, `travel`, or `system-design-companion`. Plugins that use OAuth prompt for sign-in when their service requires it.
 
 ### Cursor
 
-Open **Settings → Plugins → Add Marketplace → Import from Repo**, enter `aranlucas/lucas-plugins`, and enable the plugins you want.
+Open **Settings → Plugins → Add Marketplace → Import from Repo**, enter `aranlucas/lucas-plugins`, and enable the plugins you need.
 
-### Other clients
+### Other Agent Plugins clients
 
-Use a plugin directory directly, such as `plugins/groceries`. Each plugin follows the Agent Plugins v1 format.
+Point the client at an individual directory such as `plugins/travel`. Each directory contains a portable `plugin.json`, optional `mcp.json`, skills, and logo. The Codex manifest for System Design Companion is kept in that plugin’s `.codex-plugin/` directory.
 
-## Development
+## Repository structure and generated files
 
-Edit the files in `plugins/` or `marketplace.json`, then validate and regenerate the client-specific files:
+The source of truth is:
+
+- `marketplace.json` for the catalog and versions.
+- `plugins/*/plugin.json` for portable plugin metadata.
+- `plugins/*/mcp.json` for portable MCP server definitions.
+- `plugins/*/skills/*/SKILL.md` and `plugins/*/assets/` for skills and logos.
+
+`scripts/sync.py` generates the Claude and Cursor marketplace catalogs, client manifests, and Claude `.mcp.json` mirrors. Do not hand-edit those generated fields.
+
+## Development and validation
 
 ```bash
 python3 scripts/sync.py
@@ -43,8 +59,4 @@ python3 scripts/sync.py --check
 python3 -m unittest discover --start-directory tests --pattern 'test_*.py'
 ```
 
-The root `marketplace.json`, each plugin's `plugin.json` and `mcp.json`, skills,
-and assets are maintained sources. `scripts/sync.py` generates the Claude and
-Cursor catalogs, client manifests, and `.mcp.json` mirrors. Cursor display names
-are currently preserved from its generated manifests. Do not hand-edit other
-generated fields. CI checks generated files and runs the sync tests.
+The validation workflow checks manifest paths, versions, schemas, MCP URLs, skill front matter, logos, and generated-file parity. The marketplace metadata is currently version `0.5.2`; plugin versions are recorded in `marketplace.json`.
