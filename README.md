@@ -7,6 +7,10 @@
 
 Lucas Plugins is a portable Agent Plugins v1 marketplace for the hosted tools I use from Claude Code, Cursor, Codex, and other compatible clients. Install the grocery plugin before meal planning, the workset plugin after the gym, or Shipshape when a repository needs a release-readiness pass. Five remote MCP connections arrive with client-specific manifests and, where useful, a matching skill.
 
+![Lucas Plugins marketplace flow](docs/readme-flow.svg)
+
+_A source-level map of clients, manifests, hosted MCP services, and optional skills._
+
 ## Available plugins
 
 | Plugin | Purpose | Hosted connection | Skill |
