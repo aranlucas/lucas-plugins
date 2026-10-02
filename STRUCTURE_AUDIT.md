@@ -7,11 +7,10 @@ installation or remote MCP service audit.
 ## Findings
 
 - **P2: Generated Cursor manifests are also configuration inputs.**
-  `scripts/sync.py` reads `displayName` from each existing
-  `.cursor-plugin/plugin.json`. Deleting and regenerating those files loses
-  custom display names, and `--check` accepts arbitrary edits to those names.
-  Move this metadata into a maintained client configuration file before making
-  generated artifacts disposable.
+  **Resolved October 2, 2026:** custom `displayName` values now live in optional
+  maintained `plugins/*/cursor.json` files. `scripts/sync.py` validates this
+  metadata without reading generated Cursor manifests, so deletion or corruption
+  of those outputs can be repaired and `--check` detects display-name drift.
 - **P2: License metadata is inconsistent.** `plugins/groceries/plugin.json`
   and `plugins/workset/plugin.json` declare ISC, while the root `LICENSE` is MIT
   and neither plugin includes an ISC license file. Clarify whether the metadata

@@ -82,6 +82,102 @@ class SyncScriptTests(unittest.TestCase):
         self.assertEqual(original, self.snapshot_generated_files())
         self.assertEqual(self.run_sync("--check").returncode, 0)
 
+    def test_sync_recreates_all_generated_artifacts_without_losing_display_names(self):
+        original = self.snapshot_generated_files()
+        for path in GENERATED_FILES:
+            if path != Path("marketplace.json"):
+                (self.root / path).unlink()
+
+        result = self.run_sync()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(original, self.snapshot_generated_files())
+        self.assertEqual(self.run_sync("--check").returncode, 0)
+
+    def test_check_rejects_display_name_drift_and_sync_repairs_it(self):
+        target = self.root / "plugins/workset/.cursor-plugin/plugin.json"
+        original = self.snapshot_generated_files()
+        stale = json.loads(target.read_text())
+        stale["displayName"] = "Accidentally edited generated name"
+        target.write_text(json.dumps(stale, indent=2) + "\n")
+        before_check = self.snapshot_generated_files()
+
+        result = self.run_sync("--check")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("plugins/workset/.cursor-plugin/plugin.json: stale", result.stderr)
+        self.assertEqual(before_check, self.snapshot_generated_files())
+        repair = self.run_sync()
+        self.assertEqual(repair.returncode, 0, repair.stderr)
+        self.assertEqual(original, self.snapshot_generated_files())
+
+    def test_sync_repairs_invalid_generated_cursor_json(self):
+        target = self.root / "plugins/workset/.cursor-plugin/plugin.json"
+        original = self.snapshot_generated_files()
+        target.write_text("{broken json")
+        before_check = self.snapshot_generated_files()
+
+        result = self.run_sync("--check")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("plugins/workset/.cursor-plugin/plugin.json: stale", result.stderr)
+        self.assertNotIn("Traceback", result.stderr)
+        self.assertEqual(before_check, self.snapshot_generated_files())
+        repair = self.run_sync()
+        self.assertEqual(repair.returncode, 0, repair.stderr)
+        self.assertEqual(original, self.snapshot_generated_files())
+
+    def test_sync_uses_maintained_cursor_display_name(self):
+        config = self.root / "plugins/workset/cursor.json"
+        config.write_text(json.dumps({"displayName": "Updated workout planner"}))
+        before_check = self.snapshot_generated_files()
+
+        result = self.run_sync("--check")
+
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("plugins/workset/.cursor-plugin/plugin.json: stale", result.stderr)
+        self.assertEqual(before_check, self.snapshot_generated_files())
+        result = self.run_sync()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        manifest = json.loads(
+            (self.root / "plugins/workset/.cursor-plugin/plugin.json").read_text()
+        )
+        self.assertEqual(manifest["displayName"], "Updated workout planner")
+        self.assertEqual(self.run_sync("--check").returncode, 0)
+
+    def test_sync_defaults_cursor_display_name_to_plugin_name(self):
+        (self.root / "plugins/workset/cursor.json").unlink()
+
+        result = self.run_sync()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        manifest = json.loads(
+            (self.root / "plugins/workset/.cursor-plugin/plugin.json").read_text()
+        )
+        self.assertEqual(manifest["displayName"], "workset")
+        self.assertEqual(self.run_sync("--check").returncode, 0)
+
+    def test_rejects_invalid_maintained_cursor_config_without_writes(self):
+        config = self.root / "plugins/workset/cursor.json"
+        original = self.snapshot_generated_files()
+        for content, diagnostic in (
+            ("{broken json", "invalid JSON"),
+            ("null", "must be an object"),
+            ("[]", "must be an object"),
+            ("{}", "displayName must be a non-empty string"),
+            ('{"displayName": null}', "displayName must be a non-empty string"),
+            ('{"displayName": 12}', "displayName must be a non-empty string"),
+            ('{"displayName": "  "}', "displayName must be a non-empty string"),
+        ):
+            for args in ((), ("--check",)):
+                with self.subTest(content=content, args=args):
+                    config.write_text(content)
+                    result = self.run_sync(*args)
+                    self.assertNotEqual(result.returncode, 0)
+                    self.assertIn(f"plugins/workset/cursor.json: {diagnostic}", result.stderr)
+                    self.assertNotIn("Traceback", result.stderr)
+                    self.assertEqual(original, self.snapshot_generated_files())
+
     def test_claude_mcp_mirrors_match_portable_servers(self):
         for plugin in PLUGIN_NAMES:
             portable = json.loads((self.root / f"plugins/{plugin}/mcp.json").read_text())
