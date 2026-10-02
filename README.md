@@ -51,9 +51,11 @@ The source of truth is:
 - `marketplace.json` for the catalog and versions.
 - `plugins/*/plugin.json` for portable plugin metadata.
 - `plugins/*/mcp.json` for portable MCP server definitions.
+- Optional `plugins/*/cursor.json` for Cursor presentation metadata. Set
+  `displayName` to a non-empty string; without this file the plugin name is used.
 - `plugins/*/skills/*/SKILL.md` and `plugins/*/assets/` for skills and logos.
 
-`scripts/sync.py` generates the Claude and Cursor marketplace catalogs, client manifests, and Claude `.mcp.json` mirrors. Do not hand-edit those generated fields.
+`scripts/sync.py` generates the Claude and Cursor marketplace catalogs, client manifests, and Claude `.mcp.json` mirrors. Do not hand-edit those generated fields. Generated client files can be deleted and recreated without losing custom display names.
 
 ## Development and validation
 

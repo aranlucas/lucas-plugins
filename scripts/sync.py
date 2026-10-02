@@ -8,6 +8,7 @@ Source of truth:
   marketplace.json
   plugins/*/plugin.json
   plugins/*/mcp.json
+  plugins/*/cursor.json (optional Cursor presentation metadata)
   plugins/*/skills/*/SKILL.md
 
 Claude Code discovers plugin MCP servers from ``.mcp.json`` at the plugin
@@ -108,6 +109,23 @@ def validate_plugin(name, plugin_dir, errors, entry):
         errors.append(
             f"{manifest_path.relative_to(ROOT)}: name must match marketplace entry {name!r}"
         )
+
+    cursor_path = plugin_dir / "cursor.json"
+    if cursor_path.exists():
+        try:
+            cursor_config = load(cursor_path)
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append(f"{cursor_path.relative_to(ROOT)}: invalid JSON: {exc}")
+        else:
+            if not isinstance(cursor_config, dict):
+                errors.append(f"{cursor_path.relative_to(ROOT)}: must be an object")
+            elif (
+                not isinstance(cursor_config.get("displayName"), str)
+                or not cursor_config["displayName"].strip()
+            ):
+                errors.append(
+                    f"{cursor_path.relative_to(ROOT)}: displayName must be a non-empty string"
+                )
 
     if mcp_path.exists():
         try:
@@ -245,12 +263,12 @@ def build_artifacts(marketplace, resolved):
             }
             artifacts[plugin_dir.relative_to(ROOT) / ".mcp.json"] = claude_mcp
 
-        existing_path = plugin_dir / ".cursor-plugin/plugin.json"
-        existing = load(existing_path) if existing_path.exists() else {}
+        # Generated files are disposable outputs, never configuration inputs.
+        cursor_path = plugin_dir / "cursor.json"
+        cursor_config = load(cursor_path) if cursor_path.exists() else {}
         cursor_data = {
             **{key: value for key, value in common.items() if value is not None},
-            "displayName": existing.get("displayName")
-            or ("Groceries (Kroger/QFC)" if name == "groceries" else name),
+            "displayName": cursor_config.get("displayName", name),
             "logo": "assets/logo.svg",
         }
         artifacts[
