@@ -5,7 +5,7 @@
 [![Validation](https://img.shields.io/github/actions/workflow/status/aranlucas/lucas-plugins/validate.yml?branch=main&label=manifests)](https://github.com/aranlucas/lucas-plugins/actions/workflows/validate.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Lucas Plugins is a portable Agent Plugins v1 marketplace for the hosted tools I use from Claude Code, Cursor, Codex, and other compatible clients. Install the grocery plugin before meal planning, the workset plugin after the gym, or Shipshape when a repository needs a release-readiness pass. Five remote MCP connections arrive with client-specific manifests and, where useful, a matching skill.
+Lucas Plugins is a portable Agent Plugins v1 marketplace for the tools and skills I use from Claude Code, Cursor, Codex, and other compatible clients. Install the grocery plugin before meal planning, the workset plugin after the gym, or Shipshape when a repository needs a release-readiness pass. Five remote MCP connections and the skills-only Lucas Mode package arrive with client-specific manifests.
 
 ![Lucas Plugins marketplace flow](docs/readme-flow.svg)
 
@@ -20,6 +20,7 @@ _A source-level map of clients, manifests, hosted MCP services, and optional ski
 | [`shipshape`](plugins/shipshape) | Read-only GitHub portfolio readiness, branch risk, delivery hygiene, security posture, and ranked action plans. | `shipshape-mcp.aranlucas.workers.dev/mcp` | `shipshape-maintainer` |
 | [`travel`](plugins/travel) | Flight, hotel, ground transport, rental car, destination, and trip planning. | `trvl-production.up.railway.app/mcp` | `travel-planner` |
 | [`system-design-companion`](plugins/system-design-companion) | Shared Excalidraw system-design diagrams and architecture review. | `system-design-companion.aranlucas.workers.dev/mcp` | `system-design-companion` |
+| [`lucas-mode`](plugins/lucas-mode) | Focused engineering work, claim verification, and reusable project verification workflows. | Skills only | `lucas-mode`, `verify-work`, `project-verification` |
 
 The remote endpoints are configured in each plugin’s `mcp.json`; no local server is started by this repository. The individual plugin READMEs document OAuth or other service-specific behavior.
 
@@ -34,7 +35,7 @@ Add this repository as a marketplace, then install one or more plugins:
 /plugin install groceries@lucas-plugins
 ```
 
-Replace `groceries` with `workset`, `shipshape`, `travel`, or `system-design-companion`. Plugins that use OAuth prompt for sign-in when their service requires it.
+Replace `groceries` with `workset`, `shipshape`, `travel`, `system-design-companion`, or `lucas-mode`. Plugins that use OAuth prompt for sign-in when their service requires it.
 
 ### Cursor
 
@@ -43,6 +44,14 @@ Open **Settings → Plugins → Add Marketplace → Import from Repo**, enter `a
 ### Other Agent Plugins clients
 
 Point the client at an individual directory such as `plugins/travel`. Each directory contains a portable `plugin.json`, optional `mcp.json`, skills, and logo. The Codex manifest for System Design Companion is kept in that plugin’s `.codex-plugin/` directory.
+
+### T3 Code
+
+T3 discovers skills through the active provider. This checkout exposes Lucas Mode
+through generated real `.agents/skills` files for Codex and relative `.claude/skills`
+links for Claude. Both derive from its maintained plugin folders. Use `$lucas-mode`, `$verify-work`, or `$project-verification` from
+the skill picker when working in this repository. For use in other projects,
+follow the [package installation guidance](plugins/lucas-mode/README.md).
 
 ## Repository structure and generated files
 
@@ -55,7 +64,7 @@ The source of truth is:
   `displayName` to a non-empty string; without this file the plugin name is used.
 - `plugins/*/skills/*/SKILL.md` and `plugins/*/assets/` for skills and logos.
 
-`scripts/sync.py` generates the Claude and Cursor marketplace catalogs, client manifests, and Claude `.mcp.json` mirrors. Do not hand-edit those generated fields. Generated client files can be deleted and recreated without losing custom display names.
+`scripts/sync.py` generates the Claude and Cursor marketplace catalogs, client manifests, Claude `.mcp.json` mirrors, and Lucas Mode's `.agents/skills` project files. Do not hand-edit those generated fields or skill copies. Generated files can be deleted and recreated without losing custom display names. Codex skips symlinked skill directories, so its project files are physical copies checked against the maintained plugin source.
 
 ## Development and validation
 
@@ -65,4 +74,4 @@ python3 scripts/sync.py --check
 python3 -m unittest discover --start-directory tests --pattern 'test_*.py'
 ```
 
-The validation workflow checks manifest paths, versions, schemas, MCP URLs, skill front matter, logos, and generated-file parity. The marketplace metadata is currently version `0.5.2`; plugin versions are recorded in `marketplace.json`.
+The validation workflow checks manifest paths, versions, schemas, MCP URLs, skill front matter, logos, and generated-file parity. The marketplace metadata is currently version `0.6.0`; plugin versions are recorded in `marketplace.json`.
