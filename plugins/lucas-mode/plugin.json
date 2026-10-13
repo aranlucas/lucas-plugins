@@ -2,7 +2,7 @@
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "lucas-mode",
   "version": "1.0.0",
-  "description": "Lucas\u2019s engineering workflow with focused changes and evidence-based verification, plus reusable project verification skills.",
+  "description": "Poteto-mode engineering workflows with T3 multi-agent orchestration, independent review, and evidence-based verification.",
   "author": {
     "name": "Lucas",
     "email": "6351530+aranlucas@users.noreply.github.com"

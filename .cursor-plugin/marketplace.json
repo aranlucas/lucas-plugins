@@ -63,7 +63,7 @@
     {
       "name": "lucas-mode",
       "source": "lucas-mode",
-      "description": "Lucas\u2019s engineering workflow with focused changes and evidence-based verification, plus reusable project verification skills.",
+      "description": "Poteto-mode engineering workflows with T3 multi-agent orchestration, independent review, and evidence-based verification.",
       "version": "1.0.0",
       "author": {
         "name": "Lucas",

@@ -20,7 +20,7 @@ _A source-level map of clients, manifests, hosted MCP services, and optional ski
 | [`shipshape`](plugins/shipshape) | Read-only GitHub portfolio readiness, branch risk, delivery hygiene, security posture, and ranked action plans. | `shipshape-mcp.aranlucas.workers.dev/mcp` | `shipshape-maintainer` |
 | [`travel`](plugins/travel) | Flight, hotel, ground transport, rental car, destination, and trip planning. | `trvl-production.up.railway.app/mcp` | `travel-planner` |
 | [`system-design-companion`](plugins/system-design-companion) | Shared Excalidraw system-design diagrams and architecture review. | `system-design-companion.aranlucas.workers.dev/mcp` | `system-design-companion` |
-| [`lucas-mode`](plugins/lucas-mode) | Focused engineering work, claim verification, and reusable project verification workflows. | Skills only | `lucas-mode`, `verify-work`, `project-verification` |
+| [`lucas-mode`](plugins/lucas-mode) | Poteto-mode workflows, T3 multi-agent orchestration, independent review, and behavioral verification. | Skills only | `lucas-mode`, `verify-work`, `project-verification` |
 
 The remote endpoints are configured in each plugin’s `mcp.json`; no local server is started by this repository. The individual plugin READMEs document OAuth or other service-specific behavior.
 
