@@ -1,0 +1,20 @@
+{
+  "name": "lucas-mode",
+  "version": "1.0.0",
+  "description": "Poteto-mode engineering workflows with T3 multi-agent orchestration, independent review, and evidence-based verification.",
+  "author": {
+    "name": "Lucas",
+    "email": "6351530+aranlucas@users.noreply.github.com"
+  },
+  "homepage": "https://github.com/aranlucas/lucas-plugins",
+  "repository": "https://github.com/aranlucas/lucas-plugins",
+  "license": "MIT",
+  "keywords": [
+    "engineering",
+    "verification",
+    "skills",
+    "t3-code"
+  ],
+  "displayName": "Lucas Mode",
+  "logo": "assets/logo.svg"
+}

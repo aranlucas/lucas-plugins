@@ -12,13 +12,21 @@ PLUGIN_NAMES = tuple(
     entry["name"]
     for entry in json.loads((REPOSITORY_ROOT / "marketplace.json").read_text())["plugins"]
 )
+MCP_PLUGIN_NAMES = tuple(
+    name for name in PLUGIN_NAMES
+    if (REPOSITORY_ROOT / f"plugins/{name}/mcp.json").is_file()
+)
 GENERATED_FILES = (
     Path("marketplace.json"),
     Path(".claude-plugin/marketplace.json"),
     Path(".cursor-plugin/marketplace.json"),
     *(Path(f"plugins/{name}/{artifact}")
       for name in PLUGIN_NAMES
-      for artifact in (".claude-plugin/plugin.json", ".mcp.json", ".cursor-plugin/plugin.json")),
+      for artifact in (".claude-plugin/plugin.json", ".cursor-plugin/plugin.json")),
+    *(Path(f"plugins/{name}/.mcp.json") for name in MCP_PLUGIN_NAMES),
+    *(Path(".agents/skills") / resource.relative_to(REPOSITORY_ROOT / "plugins/lucas-mode/skills")
+      for resource in (REPOSITORY_ROOT / "plugins/lucas-mode/skills").rglob("*")
+      if resource.is_file()),
 )
 
 
@@ -29,6 +37,7 @@ class SyncScriptTests(unittest.TestCase):
         shutil.copytree(
             REPOSITORY_ROOT,
             self.root,
+            symlinks=True,
             ignore=shutil.ignore_patterns(".git", "__pycache__"),
         )
 
@@ -179,12 +188,58 @@ class SyncScriptTests(unittest.TestCase):
                     self.assertEqual(original, self.snapshot_generated_files())
 
     def test_claude_mcp_mirrors_match_portable_servers(self):
-        for plugin in PLUGIN_NAMES:
+        for plugin in MCP_PLUGIN_NAMES:
             portable = json.loads((self.root / f"plugins/{plugin}/mcp.json").read_text())
             claude = json.loads((self.root / f"plugins/{plugin}/.mcp.json").read_text())
 
             self.assertNotIn("$schema", claude)
             self.assertEqual(claude["mcpServers"], portable["mcpServers"])
+
+    def test_skills_only_plugins_regenerate_without_mcp_configuration(self):
+        for plugin in set(PLUGIN_NAMES) - set(MCP_PLUGIN_NAMES):
+            with self.subTest(plugin=plugin):
+                directory = self.root / "plugins" / plugin
+                self.assertFalse((directory / ".mcp.json").exists())
+                for path in (".claude-plugin/plugin.json", ".cursor-plugin/plugin.json"):
+                    (directory / path).unlink()
+                result = self.run_sync()
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertFalse((directory / ".mcp.json").exists())
+                claude = json.loads((directory / ".claude-plugin/plugin.json").read_text())
+                self.assertEqual(claude["skills"], "./skills/")
+                self.assertTrue(list((directory / "skills").glob("*/SKILL.md")))
+                self.assertEqual(self.run_sync("--check").returncode, 0)
+
+    def test_project_discovery_tracks_packaged_skills_after_relocation(self):
+        packaged = self.root / "plugins/lucas-mode/skills"
+        for directory in packaged.iterdir():
+            canonical = directory / "SKILL.md"
+            codex = self.root / ".agents/skills" / directory.name / "SKILL.md"
+            claude = self.root / ".claude/skills" / directory.name / "SKILL.md"
+            self.assertFalse(codex.parent.is_symlink())
+            self.assertFalse(codex.is_symlink())
+            self.assertEqual(codex.read_bytes(), canonical.read_bytes())
+            self.assertEqual(claude.resolve(), canonical.resolve())
+            canonical.write_text(canonical.read_text() + "\nRelocated fixture marker.\n")
+            self.assertNotEqual(codex.read_bytes(), canonical.read_bytes())
+            result = self.run_sync("--check")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(f".agents/skills/{directory.name}/SKILL.md: stale", result.stderr)
+            self.assertEqual(self.run_sync().returncode, 0)
+            self.assertEqual(codex.read_bytes(), canonical.read_bytes())
+            self.assertEqual(claude.read_bytes(), canonical.read_bytes())
+
+    def test_project_skill_generation_refuses_symlink_outputs_without_writes(self):
+        target = self.root / ".agents/skills/lucas-mode/SKILL.md"
+        target.unlink()
+        canonical = self.root / "plugins/lucas-mode/skills/lucas-mode/SKILL.md"
+        target.symlink_to(canonical)
+        before = self.snapshot_generated_files()
+        for args in ((), ("--check",)):
+            result = self.run_sync(*args)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("symlink output is not supported", result.stderr)
+            self.assertEqual(before, self.snapshot_generated_files())
 
     def test_marketplace_sources_match_each_client_path_model(self):
         claude = json.loads((self.root / ".claude-plugin/marketplace.json").read_text())
