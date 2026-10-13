@@ -41,15 +41,11 @@ def load(path):
 
 def save(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(artifact_bytes(data))
+    path.write_text(render(data))
 
 
 def render(data):
     return json.dumps(data, indent=2) + "\n"
-
-
-def artifact_bytes(data):
-    return data if isinstance(data, bytes) else render(data).encode()
 
 
 def clean_path(value):
@@ -279,15 +275,6 @@ def build_artifacts(marketplace, resolved):
             plugin_dir.relative_to(ROOT) / ".cursor-plugin/plugin.json"
         ] = cursor_data
 
-        # Codex's native scanner does not discover symlinked skill directories.
-        # Keep the plugin as the maintained source and generate real project files.
-        if name == "lucas-mode":
-            skills_dir = plugin_dir / "skills"
-            for resource in sorted(skills_dir.rglob("*")):
-                if resource.is_file():
-                    relative = pathlib.Path(".agents/skills") / resource.relative_to(skills_dir)
-                    artifacts[relative] = resource.read_bytes()
-
     return artifacts
 
 
@@ -295,7 +282,7 @@ def check_artifacts(artifacts):
     stale = []
     for relative_path, data in artifacts.items():
         path = ROOT / relative_path
-        expected = artifact_bytes(data)
+        expected = render(data).encode()
         try:
             actual = path.read_bytes()
         except OSError:
@@ -404,13 +391,6 @@ def main(argv=None):
         return 1
 
     artifacts = build_artifacts(marketplace, resolved)
-    for relative_path, data in artifacts.items():
-        if not isinstance(data, bytes):
-            continue
-        output = ROOT / relative_path
-        if output.is_symlink() or any(parent.is_symlink() for parent in output.parents if parent != ROOT):
-            print(f"error: generated project skill {relative_path}: symlink output is not supported", file=sys.stderr)
-            return 1
     if args.check:
         if not check_artifacts(artifacts):
             return 1
