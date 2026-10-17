@@ -18,9 +18,10 @@ installation or remote MCP service audit.
   declarations and license text. This audit preserves the existing declarations.
 - **P3: Validation is a targeted check, not full schema validation.** The sync
   script checks selected fields but does not load the referenced schemas. For
-  example, malformed marketplace metadata can still raise an exception instead
-  of producing a validation diagnostic. Add explicit shape checks or pinned
-  schema validation if accepting third-party plugin contributions.
+  example, the October 17, 2026 test audit added explicit object and required
+  artifact-field checks for the marketplace, metadata, and catalog entries.
+  Malformed values now produce diagnostics before artifact generation or writes.
+  Full schema validation remains outside this targeted check.
 
 ## Repairs Included
 

@@ -323,7 +323,21 @@ def main(argv=None):
         return 1
 
     errors = []
-    metadata = marketplace.setdefault("metadata", {})
+    if not isinstance(marketplace, dict):
+        print("error: marketplace.json: must be an object", file=sys.stderr)
+        return 1
+    if not isinstance(marketplace.get("name"), str) or not marketplace["name"].strip():
+        errors.append("marketplace.json: name must be a non-empty string")
+    if not isinstance(marketplace.get("owner"), dict):
+        errors.append("marketplace.json: owner must be an object")
+
+    metadata = marketplace.get("metadata")
+    if not isinstance(metadata, dict):
+        errors.append("marketplace.json: metadata must be an object")
+        metadata = {}
+    for field in ("description", "version"):
+        if not isinstance(metadata.get(field), str) or not metadata[field].strip():
+            errors.append(f"marketplace.json: metadata.{field} must be a non-empty string")
     try:
         plugin_root = clean_path(metadata.get("pluginRoot", "plugins"))
     except ValueError as exc:
@@ -342,6 +356,10 @@ def main(argv=None):
         if not isinstance(entry, dict):
             errors.append(f"marketplace.json: plugins[{index}] must be an object")
             continue
+        if not isinstance(entry.get("description"), str) or not entry["description"].strip():
+            errors.append(
+                f"marketplace.json: plugins[{index}].description must be a non-empty string"
+            )
         name = entry.get("name")
         if not isinstance(name, str) or not NAME_RE.fullmatch(name):
             errors.append(f"marketplace.json: plugins[{index}].name is not lowercase kebab-case")
