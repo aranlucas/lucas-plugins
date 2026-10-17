@@ -134,9 +134,10 @@ def validate_plugin(name, plugin_dir, errors, entry):
             errors.append(f"{mcp_path.relative_to(ROOT)}: invalid JSON: {exc}")
             mcp = None
 
-        if mcp is not None and not isinstance(mcp, dict):
-            errors.append(f"{mcp_path.relative_to(ROOT)}: must be an object")
-            mcp = None
+        else:
+            if not isinstance(mcp, dict):
+                errors.append(f"{mcp_path.relative_to(ROOT)}: must be an object")
+                mcp = None
         if mcp is not None:
             if mcp.get("$schema") != MCP_SCHEMA:
                 errors.append(f"{mcp_path.relative_to(ROOT)}: expected $schema {MCP_SCHEMA}")
@@ -150,6 +151,11 @@ def validate_plugin(name, plugin_dir, errors, entry):
                         errors.append(f"{label} must be an object")
                         continue
                     server_type = server.get("type")
+                    if not isinstance(server_type, str) or server_type not in MCP_TYPES:
+                        errors.append(
+                            f"{label}.type must be one of {sorted(MCP_TYPES)}, got {server_type!r}"
+                        )
+                        continue
                     if server_type == "stdio":
                         command = server.get("command")
                         if not isinstance(command, str) or not command.strip():
@@ -157,10 +163,6 @@ def validate_plugin(name, plugin_dir, errors, entry):
                         args = server.get("args", [])
                         if not isinstance(args, list) or not all(isinstance(arg, str) for arg in args):
                             errors.append(f"{label}.args must be an array of strings")
-                    if server_type not in MCP_TYPES:
-                        errors.append(
-                            f"{label}.type must be one of {sorted(MCP_TYPES)}, got {server_type!r}"
-                        )
                     if server_type in {"streamable-http", "sse"}:
                         url = server.get("url")
                         parsed = urlparse(url) if isinstance(url, str) else None

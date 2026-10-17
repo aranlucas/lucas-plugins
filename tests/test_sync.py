@@ -249,6 +249,44 @@ class SyncScriptTests(unittest.TestCase):
                     self.assertNotIn("Traceback", result.stderr)
                     self.assertEqual(before, self.snapshot_generated_files())
 
+    def test_rejects_malformed_portable_mcp_without_writes(self):
+        target = self.root / "plugins/travel/mcp.json"
+        schema = json.loads(target.read_text())["$schema"]
+        cases = [("{broken json", "invalid JSON")]
+        non_objects = (None, False, True, 0, 1.5, "", "mcp", [], ["server"])
+        for value in non_objects:
+            cases.append((json.dumps(value), "must be an object"))
+            cases.append((json.dumps({"$schema": schema, "mcpServers": value}),
+                          "mcpServers must be an object"))
+            cases.append((json.dumps({"$schema": schema, "mcpServers": {"test": value}}),
+                          "mcpServers.test must be an object"))
+        cases.append((json.dumps({"$schema": schema}), "mcpServers must be an object"))
+        for server_type in (*non_objects, {}, "unsupported"):
+            cases.append((json.dumps({"$schema": schema, "mcpServers": {
+                "test": {"type": server_type}
+            }}), "mcpServers.test.type must be one of"))
+        cases.append((json.dumps({"$schema": schema, "mcpServers": {"test": {}}}),
+                      "mcpServers.test.type must be one of"))
+
+        for content, diagnostic in cases:
+            for args in ((), ("--check",)):
+                with self.subTest(content=content, args=args):
+                    target.write_text(content)
+                    before = {
+                        path.relative_to(self.root): path.read_bytes()
+                        for path in self.root.rglob("*") if path.is_file()
+                    }
+                    result = self.run_sync(*args)
+                    after = {
+                        path.relative_to(self.root): path.read_bytes()
+                        for path in self.root.rglob("*") if path.is_file()
+                    }
+                    self.assertEqual(before, after)
+                    self.assertEqual(result.returncode, 1, result.stderr)
+                    self.assertIn(f"plugins/travel/mcp.json: {diagnostic}", result.stderr)
+                    self.assertIn("validate: failed", result.stderr)
+                    self.assertNotIn("Traceback", result.stderr)
+
     def test_rejects_invalid_stdio_configuration(self):
         target = self.root / "plugins/travel/mcp.json"
         original = json.loads(target.read_text())
