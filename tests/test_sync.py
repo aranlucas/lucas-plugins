@@ -215,6 +215,40 @@ class SyncScriptTests(unittest.TestCase):
             portable = json.loads((self.root / f"plugins/{plugin}/plugin.json").read_text())
             self.assertEqual(manifest["keywords"], portable["keywords"])
 
+    def test_rejects_invalid_marketplace_shapes_without_writes(self):
+        target = self.root / "marketplace.json"
+        canonical = json.loads(target.read_text())
+        cases = [
+            ([], "marketplace.json: must be an object"),
+            (None, "marketplace.json: must be an object"),
+            ({**canonical, "metadata": None}, "marketplace.json: metadata must be an object"),
+            ({**canonical, "metadata": []}, "marketplace.json: metadata must be an object"),
+            ({**canonical, "metadata": {**canonical["metadata"], "description": None}},
+             "marketplace.json: metadata.description must be a non-empty string"),
+            ({**canonical, "metadata": {**canonical["metadata"], "version": "  "}},
+             "marketplace.json: metadata.version must be a non-empty string"),
+            ({key: value for key, value in canonical.items() if key != "name"},
+             "marketplace.json: name must be a non-empty string"),
+            ({key: value for key, value in canonical.items() if key != "owner"},
+             "marketplace.json: owner must be an object"),
+            ({**canonical, "metadata": {"pluginRoot": "./plugins"}},
+             "marketplace.json: metadata.description must be a non-empty string"),
+            ({**canonical, "plugins": [
+                {key: value for key, value in entry.items() if key != "description"}
+                for entry in canonical["plugins"]
+            ]}, "marketplace.json: plugins[0].description must be a non-empty string"),
+        ]
+        for marketplace, diagnostic in cases:
+            for args in ((), ("--check",)):
+                with self.subTest(marketplace=marketplace, args=args):
+                    target.write_text(json.dumps(marketplace))
+                    before = self.snapshot_generated_files()
+                    result = self.run_sync(*args)
+                    self.assertEqual(result.returncode, 1, result.stderr)
+                    self.assertIn(diagnostic, result.stderr)
+                    self.assertNotIn("Traceback", result.stderr)
+                    self.assertEqual(before, self.snapshot_generated_files())
+
     def test_rejects_invalid_stdio_configuration(self):
         target = self.root / "plugins/travel/mcp.json"
         original = json.loads(target.read_text())
