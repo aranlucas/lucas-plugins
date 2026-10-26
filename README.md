@@ -2,7 +2,7 @@
 
 ## Give your coding agent a better weekend.
 
-[![Validation](https://img.shields.io/github/actions/workflow/status/aranlucas/lucas-plugins/validate.yml?branch=main&label=manifests)](https://github.com/aranlucas/lucas-plugins/actions/workflows/validate.yml)
+[![Validation](https://img.shields.io/github/actions/workflow/status/aranlucas/lucas-plugins/ci.yml?branch=main&label=manifests)](https://github.com/aranlucas/lucas-plugins/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 Lucas Plugins is a portable Agent Plugins v1 marketplace for the tools and skills I use from Claude Code, Cursor, Codex, and other compatible clients. Install the grocery plugin before meal planning, the workset plugin after the gym, or Shipshape when a repository needs a release-readiness pass. Five remote MCP connections arrive with client-specific manifests. T3 coding workflows live in the separate [t3-pstack repository](https://github.com/chhoumann/t3-pstack).
@@ -87,4 +87,6 @@ python3 scripts/sync.py --check
 python3 -m unittest discover --start-directory tests --pattern 'test_*.py'
 ```
 
-The validation workflow checks manifest paths, versions, schemas, MCP URLs, skill front matter, logos, and generated-file parity. The marketplace metadata is currently version `0.7.0`; plugin versions are recorded in `marketplace.json`.
+The validation workflow checks manifest paths, versions, schemas, MCP URLs, skill front matter, logos, and generated-file parity. Remote MCP URLs need an HTTP(S) scheme, hostname, and valid port when supplied. Malformed URLs fail validation before any generated file is written. `--check` reports drift without repairing it; run sync without that flag, review the diff, and rerun the check to repair generated files. The marketplace metadata is currently version `0.7.0`; plugin versions are recorded in `marketplace.json`.
+
+The sync script is retained for the marketplace's client-specific conversion rules: Claude and Cursor resolve plugin sources differently and need different generated manifests. A JSON formatter or schema checker alone cannot reproduce those artifacts. The `unittest` suite checks those mappings, rejection of malformed inputs, preservation of source metadata, and no-write behavior on failed validation.

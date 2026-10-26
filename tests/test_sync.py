@@ -267,6 +267,12 @@ class SyncScriptTests(unittest.TestCase):
             }}), "mcpServers.test.type must be one of"))
         cases.append((json.dumps({"$schema": schema, "mcpServers": {"test": {}}}),
                       "mcpServers.test.type must be one of"))
+        for server_type in ("streamable-http", "sse"):
+            for url in (None, "/mcp", "https://[invalid/mcp", "https://:443/mcp",
+                        "https://example.com:invalid/mcp", "https://example.com:70000/mcp"):
+                cases.append((json.dumps({"$schema": schema, "mcpServers": {
+                    "test": {"type": server_type, "url": url}
+                }}), "mcpServers.test.url must be an absolute HTTP(S) URL"))
 
         for content, diagnostic in cases:
             for args in ((), ("--check",)):

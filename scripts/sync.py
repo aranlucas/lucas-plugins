@@ -165,8 +165,14 @@ def validate_plugin(name, plugin_dir, errors, entry):
                             errors.append(f"{label}.args must be an array of strings")
                     if server_type in {"streamable-http", "sse"}:
                         url = server.get("url")
-                        parsed = urlparse(url) if isinstance(url, str) else None
-                        if not parsed or parsed.scheme not in {"http", "https"} or not parsed.netloc:
+                        try:
+                            parsed = urlparse(url) if isinstance(url, str) else None
+                            if parsed:
+                                # urllib validates the port only when this property is read.
+                                _ = parsed.port
+                        except ValueError:
+                            parsed = None
+                        if not parsed or parsed.scheme not in {"http", "https"} or not parsed.hostname:
                             errors.append(f"{label}.url must be an absolute HTTP(S) URL")
 
     skills_dir = plugin_dir / "skills"
