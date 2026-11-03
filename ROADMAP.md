@@ -2,14 +2,6 @@
 
 Updated 2026-10-26. Proposed sequence, not delivery dates. Success targets below are unvalidated pilot gates, not adoption or revenue results.
 
-## User and current baseline
-
-A user wants to install the right MCP capability in their client, connect their account and complete a first useful task without troubleshooting manifests.
-
-The marketplace already packages groceries, workset, Shipshape, travel and System Design connections with client manifests and optional skills. It distributes integrations; it should not become a second service runtime.
-
-Planning source: [README](README.md) at `9d27197a9e41`. This is a focused planning pass, not a new comprehensive code audit or live-service validation.
-
 ## Prioritized releases
 
 | Order | Feature                                             | Useful scope                                                                                                                               | Release acceptance                                                                                                                             |
@@ -29,4 +21,4 @@ Collect the baseline before implementation. Use voluntary feedback and aggregate
 
 Runtime features belong to their service repositories. Skills must describe the actual service contract and should not silently expand authorization. Add Digits or Garmin distribution only after their first-use journey and target-client support are verified.
 
-Use existing libraries and native test commands. Attach reliability work to the feature acceptance it enables. Update this file with shipped user outcomes and observed pilot results; refactors or passing tests alone do not demonstrate product value.
+Update this file with shipped user outcomes and observed pilot results.
