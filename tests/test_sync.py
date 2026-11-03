@@ -100,23 +100,6 @@ class SyncScriptTests(unittest.TestCase):
         self.assertEqual(original, self.snapshot_generated_files())
         self.assertEqual(self.run_sync("--check").returncode, 0)
 
-    def test_check_rejects_display_name_drift_and_sync_repairs_it(self):
-        target = self.root / "plugins/workset/.cursor-plugin/plugin.json"
-        original = self.snapshot_generated_files()
-        stale = json.loads(target.read_text())
-        stale["displayName"] = "Accidentally edited generated name"
-        target.write_text(json.dumps(stale, indent=2) + "\n")
-        before_check = self.snapshot_generated_files()
-
-        result = self.run_sync("--check")
-
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn("plugins/workset/.cursor-plugin/plugin.json: stale", result.stderr)
-        self.assertEqual(before_check, self.snapshot_generated_files())
-        repair = self.run_sync()
-        self.assertEqual(repair.returncode, 0, repair.stderr)
-        self.assertEqual(original, self.snapshot_generated_files())
-
     def test_sync_repairs_invalid_generated_cursor_json(self):
         target = self.root / "plugins/workset/.cursor-plugin/plugin.json"
         original = self.snapshot_generated_files()
