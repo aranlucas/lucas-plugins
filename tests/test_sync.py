@@ -167,6 +167,54 @@ class SyncScriptTests(unittest.TestCase):
                     self.assertNotIn("Traceback", result.stderr)
                     self.assertEqual(original, self.snapshot_generated_files())
 
+    def test_removed_mcp_source_removes_generated_connection(self):
+        (self.root / "plugins/travel/mcp.json").unlink()
+        mirror = self.root / "plugins/travel/.mcp.json"
+        before = self.snapshot_generated_files()
+        result = self.run_sync("--check")
+        self.assertEqual(result.returncode, 1, "removed MCP must fail check")
+        self.assertIn("plugins/travel/.mcp.json: obsolete", result.stderr)
+        self.assertEqual(before, self.snapshot_generated_files())
+        result = self.run_sync()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(mirror.exists())
+        self.assertTrue((self.root / "plugins/workset/.mcp.json").is_file())
+        self.assertEqual(self.run_sync().returncode, 0)
+        self.assertEqual(self.run_sync("--check").returncode, 0)
+
+    def test_generated_symlinks_cannot_overwrite_external_files(self):
+        outside = Path(self.temp_dir.name) / "external"
+        outside.mkdir()
+        sentinel = outside / "marketplace.json"
+        sentinel.write_bytes(b"external sentinel")
+        # An earlier stale output must not be repaired before rejection.
+        (self.root / ".claude-plugin/marketplace.json").write_bytes(b"stale catalog")
+        # Both leaf links and directory links used to redirect writes outside.
+        for directory_link in (False, True):
+            target = self.root / ".cursor-plugin"
+            saved = self.root / "cursor-backup"
+            target.rename(saved)
+            if directory_link:
+                target.symlink_to(outside, target_is_directory=True)
+            else:
+                target.mkdir()
+                (target / "marketplace.json").symlink_to(sentinel)
+            try:
+                before = self.snapshot_generated_files()
+                for args in ((), ("--check",)):
+                    with self.subTest(directory_link=directory_link, args=args):
+                        result = self.run_sync(*args)
+                        self.assertEqual(result.returncode, 1, "symlink output must fail")
+                        self.assertIn("generated output must not use symlinks", result.stderr)
+                        self.assertEqual(sentinel.read_bytes(), b"external sentinel")
+                        self.assertEqual(before, self.snapshot_generated_files())
+            finally:
+                if directory_link:
+                    target.unlink()
+                else:
+                    shutil.rmtree(target)
+                saved.rename(target)
+
     def test_claude_mcp_mirrors_match_portable_servers(self):
         for plugin in MCP_PLUGIN_NAMES:
             portable = json.loads((self.root / f"plugins/{plugin}/mcp.json").read_text())

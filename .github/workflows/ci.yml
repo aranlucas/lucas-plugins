@@ -36,3 +36,45 @@ jobs:
 
           - name: Test
             run: python -m unittest discover --start-directory tests --pattern 'test_*.py'
+
+  regression-baseline:
+    name: Pre-fix reproduction (${{ matrix.regression }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    strategy:
+      matrix:
+        include:
+          - regression: removed-mcp
+            test: test_removed_mcp_source_removes_generated_connection
+            assertion: removed MCP must fail check
+          - regression: symlink-output
+            test: test_generated_symlinks_cannot_overwrite_external_files
+            assertion: symlink output must fail
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.x"
+      - name: Require the regression to expose the original defect
+        env:
+          REGRESSION_TEST: ${{ matrix.test }}
+          EXPECTED_ASSERTION: ${{ matrix.assertion }}
+        run: |
+          git show 896abe2c5d2e51042e26e703ef21987f46e054bb:scripts/sync.py > scripts/sync.py
+          if python -m unittest discover -s tests -p test_sync.py -k "$REGRESSION_TEST" > regression.log 2>&1; then
+            cat regression.log
+            echo 'Regression unexpectedly passed on the defective generator'
+            exit 1
+          fi
+          cat regression.log
+          grep -F "AssertionError:" regression.log
+          grep -F "$EXPECTED_ASSERTION" regression.log
+      - name: Preserve baseline reproduction evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pre-fix-${{ matrix.regression }}
+          path: regression.log
