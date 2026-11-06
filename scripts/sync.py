@@ -284,7 +284,28 @@ def build_artifacts(marketplace, resolved):
     return artifacts
 
 
-def check_artifacts(artifacts):
+def obsolete_artifacts(resolved):
+    """Only the generated MCP mirror is conditional within a registered plugin."""
+    return [plugin.directory.relative_to(ROOT) / ".mcp.json"
+            for plugin in resolved if plugin.mcp is None]
+
+
+def validate_output_paths(paths):
+    # Reject links at every output component, including dangling links. Checking
+    # the whole plan first prevents partial writes before an unsafe later output.
+    errors = []
+    for relative_path in paths:
+        path = ROOT / relative_path
+        for component in (path, *path.parents):
+            if component == ROOT:
+                break
+            if component.is_symlink():
+                errors.append(f"{relative_path}: generated output must not use symlinks")
+                break
+    return errors
+
+
+def check_artifacts(artifacts, obsolete=()):
     stale = []
     for relative_path, data in artifacts.items():
         path = ROOT / relative_path
@@ -296,6 +317,10 @@ def check_artifacts(artifacts):
             continue
         if actual != expected:
             stale.append(f"{relative_path}: stale")
+
+    for relative_path in obsolete:
+        if (ROOT / relative_path).exists():
+            stale.append(f"{relative_path}: obsolete")
 
     if stale:
         for error in stale:
@@ -415,14 +440,23 @@ def main(argv=None):
         return 1
 
     artifacts = build_artifacts(marketplace, resolved)
+    obsolete = obsolete_artifacts(resolved)
+    output_errors = validate_output_paths([*artifacts, *obsolete])
+    if output_errors:
+        for error in output_errors:
+            print(f"error: {error}", file=sys.stderr)
+        return 1
     if args.check:
-        if not check_artifacts(artifacts):
+        if not check_artifacts(artifacts, obsolete):
             return 1
         print("validate: passed")
         return 0
 
     for relative_path, data in artifacts.items():
         save(ROOT / relative_path, data)
+
+    for relative_path in obsolete:
+        (ROOT / relative_path).unlink(missing_ok=True)
 
     print(f"sync: emitted marketplaces + {len(resolved)} plugin manifests")
     print("validate: passed")
