@@ -16,11 +16,11 @@ Help the user plan and track training in workset (opengym2).
 
 ## Project
 
-Source: [aranlucas/opengym2](https://github.com/aranlucas/opengym2) — Go + SQLite + React. Run locally with `go run ./cmd/opengym-api`.
+Source: [aranlucas/opengym2](https://github.com/aranlucas/opengym2).
+Use the connected `workset` MCP server and its current tool schemas.
 
 ## Guidance
 
-- Keep the homeOperate answers front and center: what to train today, how long, recovery, adherence.
-- Calendar marks: check = completed, neutral bar = planned, orange diamond = rescheduled.
+- Focus on the user’s training decisions: what to train today, how long, recovery, adherence.
 - Recovery is an estimate from recent effective sets, not a physiological measurement.
-- If no MCP is configured yet, offer to set one up or point to the local API.
+- If the connection is unavailable, report the issue and help the user reconnect.
