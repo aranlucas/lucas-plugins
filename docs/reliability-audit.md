@@ -78,3 +78,11 @@ Independent static review confirmed both defects and requested strengthening the
 symlink regression with an earlier stale output: that output must stay stale on
 failure, detecting partial writes even when they would otherwise be idempotent.
 This objection was addressed before submission. No local tests/builds run.
+
+CI run [42302929475](https://github.com/aranlucas/lucas-plugins/actions/runs/42302929475)
+on implementation head `0f1fdd40e65d9aa4a7cd26edc88a87939484fe5c` passed
+all three jobs: artifact check (18 files), all 19 unittest journeys, and both
+pre-fix reproduction matrix jobs. Logs confirm baseline failures specifically
+`removed MCP must fail check` and `symlink output must fail`; evidence artifacts
+were uploaded. No test/build ran locally. PR:
+https://github.com/aranlucas/lucas-plugins/pull/23.
