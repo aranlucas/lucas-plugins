@@ -25,6 +25,7 @@ import json
 import pathlib
 import re
 import sys
+from dataclasses import dataclass
 from urllib.parse import urlparse
 
 
@@ -33,6 +34,18 @@ PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 MCP_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
 MCP_TYPES = {"stdio", "streamable-http", "sse"}
 NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
+
+
+@dataclass
+class Plugin:
+    name: str
+    entry: dict
+    source: str
+    directory: pathlib.Path
+    manifest: dict
+    mcp: dict | None
+    cursor: dict
+    has_skills: bool
 
 
 def load(path):
@@ -79,7 +92,7 @@ def parse_frontmatter(path):
     return values
 
 
-def validate_plugin(name, plugin_dir, errors, entry):
+def validate_plugin(name, plugin_dir, errors, entry, source):
     manifest_path = plugin_dir / "plugin.json"
     mcp_path = plugin_dir / "mcp.json"
 
@@ -111,6 +124,7 @@ def validate_plugin(name, plugin_dir, errors, entry):
         )
 
     cursor_path = plugin_dir / "cursor.json"
+    cursor_config = {}
     if cursor_path.exists():
         try:
             cursor_config = load(cursor_path)
@@ -127,6 +141,7 @@ def validate_plugin(name, plugin_dir, errors, entry):
                     f"{cursor_path.relative_to(ROOT)}: displayName must be a non-empty string"
                 )
 
+    mcp = None
     if mcp_path.exists():
         try:
             mcp = load(mcp_path)
@@ -193,9 +208,11 @@ def validate_plugin(name, plugin_dir, errors, entry):
             if not frontmatter.get("description"):
                 errors.append(f"{skill.relative_to(ROOT)}: description is required")
 
+    return Plugin(name, entry, source, plugin_dir, manifest, mcp, cursor_config,
+                  skills_dir.is_dir())
+
 
 def build_artifacts(marketplace, resolved):
-    """Build the files emitted by sync without writing any of them."""
     # The canonical catalog is also the Claude Code catalog. Its sources are
     # explicit paths from the marketplace root (for example,
     # ``./plugins/shipshape``), which works on Claude Code versions that do not
@@ -217,40 +234,28 @@ def build_artifacts(marketplace, resolved):
         },
         "plugins": [
             {
-                "name": entry["name"],
-                "source": source,
-                "description": entry["description"],
-                "version": entry.get("version"),
-                "author": entry.get("author"),
+                "name": plugin.name,
+                "source": plugin.source,
+                "description": plugin.entry["description"],
+                **{key: plugin.entry[key] for key in ("version", "author")
+                   if plugin.entry.get(key) is not None},
             }
-            for _, entry, source, _ in resolved
+            for plugin in resolved
         ],
     }
-    for entry in cursor_marketplace["plugins"]:
-        for key in ["version", "author"]:
-            if entry[key] is None:
-                del entry[key]
     artifacts[pathlib.Path(".cursor-plugin/marketplace.json")] = cursor_marketplace
 
-    for name, _, _, plugin_dir in resolved:
-        portable = load(plugin_dir / "plugin.json")
+    for plugin in resolved:
+        plugin_dir = plugin.directory
         common = {
-            "name": portable["name"],
-            "version": portable.get("version"),
-            "description": portable.get("description"),
-            "author": portable.get("author"),
-            "homepage": portable.get("homepage"),
-            "repository": portable.get("repository"),
-            "license": portable.get("license"),
-            "keywords": portable.get("keywords"),
+            key: plugin.manifest[key]
+            for key in ("name", "version", "description", "author", "homepage",
+                        "repository", "license", "keywords")
+            if plugin.manifest.get(key) is not None
         }
 
-        claude_data = {
-            key: value
-            for key, value in common.items()
-            if value is not None
-        }
-        if (plugin_dir / "skills").is_dir():
+        claude_data = common.copy()
+        if plugin.has_skills:
             # Keep the component path explicit, matching Claude Code's
             # first-party marketplace template while retaining the portable
             # fixed-layout source of truth.
@@ -261,22 +266,15 @@ def build_artifacts(marketplace, resolved):
 
         # Agent Plugins keeps the portable MCP schema in mcp.json, while Claude
         # Code loads plugin servers from the root-level .mcp.json convention.
-        # Keep the server definitions identical and omit the portable-only
-        # $schema key so Claude receives its native config shape.
-        mcp_path = plugin_dir / "mcp.json"
-        if mcp_path.is_file():
-            portable_mcp = load(mcp_path)
+        if plugin.mcp is not None:
             claude_mcp = {
-                key: value for key, value in portable_mcp.items() if key != "$schema"
+                key: value for key, value in plugin.mcp.items() if key != "$schema"
             }
             artifacts[plugin_dir.relative_to(ROOT) / ".mcp.json"] = claude_mcp
 
-        # Generated files are disposable outputs, never configuration inputs.
-        cursor_path = plugin_dir / "cursor.json"
-        cursor_config = load(cursor_path) if cursor_path.exists() else {}
         cursor_data = {
-            **{key: value for key, value in common.items() if value is not None},
-            "displayName": cursor_config.get("displayName", name),
+            **common,
+            "displayName": plugin.cursor.get("displayName", plugin.name),
             "logo": "assets/logo.svg",
         }
         artifacts[
@@ -360,6 +358,7 @@ def main(argv=None):
 
     seen = set()
     resolved = []
+    registered = set()
     for index, entry in enumerate(entries):
         if not isinstance(entry, dict):
             errors.append(f"marketplace.json: plugins[{index}] must be an object")
@@ -387,8 +386,6 @@ def main(argv=None):
         prefix = f"{plugin_root}/"
         if source.startswith(prefix):
             source = source[len(prefix) :]
-        # Keep canonical/Claude sources relative to the marketplace root. The
-        # Cursor artifact derives a bare source from ``resolved`` below.
         entry["source"] = f"./{plugin_root}/{source}"
 
         plugin_dir = ROOT / plugin_root / source
@@ -402,10 +399,11 @@ def main(argv=None):
                 f"marketplace.json: {plugin_root}/{source} does not exist for plugin {name!r}"
             )
             continue
-        resolved.append((name, entry, source, plugin_dir))
-        validate_plugin(name, plugin_dir, errors, entry)
+        registered.add(plugin_dir.resolve())
+        plugin = validate_plugin(name, plugin_dir, errors, entry, source)
+        if plugin is not None:
+            resolved.append(plugin)
 
-    registered = {plugin_dir.resolve() for _, _, _, plugin_dir in resolved}
     for manifest_path in sorted((ROOT / plugin_root).glob("*/plugin.json")):
         if manifest_path.parent.resolve() not in registered:
             errors.append(f"{manifest_path.relative_to(ROOT)}: plugin is not registered in marketplace")

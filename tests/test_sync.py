@@ -176,18 +176,34 @@ class SyncScriptTests(unittest.TestCase):
             self.assertEqual(claude["mcpServers"], portable["mcpServers"])
 
     def test_marketplace_sources_match_each_client_path_model(self):
+        target = self.root / "marketplace.json"
+        marketplace = json.loads(target.read_text())
+        marketplace["metadata"]["pluginRoot"] = "./extensions"
+        for entry in marketplace["plugins"]:
+            entry["source"] = entry["name"]
+            if entry["name"] == "travel":
+                entry["source"] = "./extensions/trip-planner"
+        target.write_text(json.dumps(marketplace))
+        (self.root / "plugins").rename(self.root / "extensions")
+        (self.root / "extensions/travel").rename(self.root / "extensions/trip-planner")
+
+        result = self.run_sync()
+
+        self.assertEqual(result.returncode, 0, result.stderr)
         claude = json.loads((self.root / ".claude-plugin/marketplace.json").read_text())
         cursor = json.loads((self.root / ".cursor-plugin/marketplace.json").read_text())
-
-        self.assertEqual(claude["metadata"]["pluginRoot"], "./plugins")
-        self.assertEqual(
-            [plugin["source"] for plugin in claude["plugins"]],
-            [f"./plugins/{plugin['name']}" for plugin in claude["plugins"]],
+        self.assertEqual(claude["metadata"]["pluginRoot"], "./extensions")
+        self.assertEqual(cursor["metadata"]["pluginRoot"], "extensions")
+        claude_sources = {plugin["name"]: plugin["source"] for plugin in claude["plugins"]}
+        cursor_sources = {plugin["name"]: plugin["source"] for plugin in cursor["plugins"]}
+        self.assertEqual(claude_sources["travel"], "./extensions/trip-planner")
+        self.assertEqual(cursor_sources["travel"], "trip-planner")
+        self.assertEqual(claude_sources["workset"], "./extensions/workset")
+        self.assertEqual(cursor_sources["workset"], "workset")
+        self.assertTrue(
+            (self.root / "extensions/trip-planner/.claude-plugin/plugin.json").is_file()
         )
-        self.assertEqual(
-            [plugin["source"] for plugin in cursor["plugins"]],
-            [plugin["name"] for plugin in cursor["plugins"]],
-        )
+        self.assertEqual(self.run_sync("--check").returncode, 0)
 
     def test_claude_manifests_declare_the_default_skill_directory(self):
         for plugin in PLUGIN_NAMES:
@@ -289,6 +305,22 @@ class SyncScriptTests(unittest.TestCase):
                 result = self.run_sync("--check")
                 self.assertNotEqual(result.returncode, 0)
                 self.assertIn("mcpServers.trvl", result.stderr)
+
+    def test_registered_plugin_with_invalid_manifest_reports_only_validation_error(self):
+        target = self.root / "plugins/travel/plugin.json"
+        for content, diagnostic in (("{broken json", "invalid JSON"),
+                                    ("[]", "must be an object")):
+            with self.subTest(content=content):
+                target.write_text(content)
+                before = self.snapshot_generated_files()
+
+                result = self.run_sync()
+
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertIn(f"plugins/travel/plugin.json: {diagnostic}", result.stderr)
+                self.assertNotIn("plugin is not registered", result.stderr)
+                self.assertNotIn("Traceback", result.stderr)
+                self.assertEqual(before, self.snapshot_generated_files())
 
     def test_rejects_version_drift(self):
         target = self.root / "plugins/travel/plugin.json"
