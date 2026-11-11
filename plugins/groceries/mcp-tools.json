@@ -1,0 +1,25 @@
+{
+  "groceries": {
+    "source": "https://github.com/aranlucas/ai-shopping-mcp/blob/c00fbdcfa68d2cb6a6d4df098f1edeb456ce3c14/test/evals/mcp-agent-contract.test.ts",
+    "tools": [
+      "add_shopping_list_to_cart",
+      "create_meal_plan",
+      "create_shopping_list",
+      "delete_shopping_list",
+      "get_meal_plan",
+      "get_shopping_list",
+      "get_shopping_profile",
+      "get_weekly_deals",
+      "prepare_meal_plan",
+      "record_order",
+      "search_products",
+      "search_stores",
+      "set_preferred_store",
+      "shop_for_items",
+      "update_inventory",
+      "update_meal_plan",
+      "update_shopping_list",
+      "view_cart"
+    ]
+  }
+}

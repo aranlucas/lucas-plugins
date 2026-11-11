@@ -1,0 +1,21 @@
+{
+  "system-design-companion": {
+    "source": "https://github.com/aranlucas/system-design-companion/blob/71ef4b35354836ac6c825f41100d74f50aa0efba/src/worker/mcp.ts",
+    "tools": [
+      "apply_patch",
+      "create_diagram",
+      "focus_view",
+      "get_screenshot",
+      "get_selection",
+      "import_mermaid",
+      "join_session",
+      "layout",
+      "list_snapshots",
+      "list_templates",
+      "restore",
+      "save_as_template",
+      "snapshot",
+      "tidy"
+    ]
+  }
+}

@@ -11,15 +11,16 @@ these plugins does not start a local server or require their development tools.
 
 | Plugin | Use it for | Service source / documentation | Agent workflow |
 | --- | --- | --- | --- |
-| [`groceries`](plugins/groceries) | Kroger/QFC shopping, carts, lists, pantry, and deals | [ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp) | [shopping-assistant](plugins/groceries/skills/shopping-assistant/SKILL.md) |
+| [`groceries`](plugins/groceries) | Kroger/QFC shopping, saved lists, carts, pantry, meal plans, and deals | [ai-shopping-mcp](https://github.com/aranlucas/ai-shopping-mcp) | [shopping-assistant](plugins/groceries/skills/shopping-assistant/SKILL.md) |
 | [`workset`](plugins/workset) | Workout planning, set logging, and progress | [opengym2](https://github.com/aranlucas/opengym2) | [workset-coach](plugins/workset/skills/workset-coach/SKILL.md) |
-| [`shipshape`](plugins/shipshape) | Read-only GitHub portfolio maintenance | [shipshape-mcp](https://github.com/aranlucas/shipshape-mcp) | [shipshape-maintainer](plugins/shipshape/skills/shipshape-maintainer/SKILL.md) |
+| [`shipshape`](plugins/shipshape) | A ranked, read-only maintenance queue for your GitHub repositories | [shipshape-mcp](https://github.com/aranlucas/shipshape-mcp) | [shipshape-maintainer](plugins/shipshape/skills/shipshape-maintainer/SKILL.md) |
 | [`travel`](plugins/travel) | Flights, hotels, ground transport, rental cars, and itineraries | [trvl](https://github.com/aranlucas/trvl) | [travel-planner](plugins/travel/skills/travel-planner/SKILL.md) |
 | [`system-design-companion`](plugins/system-design-companion) | Create, join, edit, or review a shared Excalidraw architecture diagram | [System Design Companion](https://system-design-companion.aranlucas.workers.dev) | [system-design-companion](plugins/system-design-companion/skills/system-design-companion/SKILL.md) |
 
 Groceries, workset, and Shipshape use OAuth; complete the client's sign-in prompt
-when required. Shipshape inspects public repositories only and does not mutate,
-clone, or execute repository code. For System Design Companion, ask the agent to
+when required. Shipshape is owner-only: it reports stored practice results for the
+repositories its GitHub App tracks, including private ones. Its MCP tools are
+read-only, and it never executes repository code. For System Design Companion, ask the agent to
 create a diagram or give it an existing canvas share link to join.
 
 See the [roadmap](ROADMAP.md) for planned first-use and connection-recovery work.
@@ -59,6 +60,13 @@ Edit `marketplace.json` for the catalog, and each plugin's `plugin.json` and
 `displayName`; otherwise Cursor uses the plugin name. Skills and logos are
 maintained in each plugin's `skills/` and `assets/` directories.
 
+Optional `mcp-tools.json` records, per MCP server, the tool names a skill may cite
+and the upstream `source` URL (pinned to a commit) they were copied from. When it
+exists, every backticked snake_case name in that plugin's skills must be listed,
+so a skill cannot keep pointing at a tool the server removed. When a server's
+tools change, update the list from its source, then fix the skills that fail.
+Write response fields and other non-tool values without backticked snake_case.
+
 ```bash
 python3 scripts/sync.py
 python3 scripts/sync.py --check
@@ -77,7 +85,7 @@ JSON formatting. Generated outputs can be recreated without losing Cursor displa
 names because those names live in maintained `cursor.json` inputs.
 
 Validation checks selected manifest fields, paths, versions, MCP URLs, skill
-front matter, logos, and generated parity; it does not load the referenced JSON
+front matter, skill tool references, logos, and generated parity; it does not load the referenced JSON
 schemas. Invalid inputs fail before generated files are written.
 
 License metadata remains unresolved: groceries and workset declare ISC in their

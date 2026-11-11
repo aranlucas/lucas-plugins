@@ -7,7 +7,7 @@
   },
   "metadata": {
     "description": "Food, gym, engineering, and travel Agent Plugins",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "pluginRoot": "./plugins",
     "targets": [
       "claude-code",
@@ -18,8 +18,8 @@
     {
       "name": "groceries",
       "source": "./plugins/groceries",
-      "description": "Kroger/QFC shopping \u2014 product search, cart, lists, pantry, weekly deals, meal-planning context",
-      "version": "2.0.0",
+      "description": "Kroger/QFC shopping \u2014 product search, saved lists, cart, pantry, meal plans, weekly deals",
+      "version": "2.1.0",
       "author": {
         "name": "Lucas",
         "email": "6351530+aranlucas@users.noreply.github.com"
@@ -38,8 +38,8 @@
     {
       "name": "shipshape",
       "source": "./plugins/shipshape",
-      "description": "Read-only GitHub portfolio maintenance \u2014 repository readiness, branch risk, delivery hygiene, security posture, and ranked action plans",
-      "version": "1.1.0",
+      "description": "Read-only GitHub maintenance queue \u2014 ranked engineering-practice failures, stored check evidence, and remediation guidance",
+      "version": "2.0.0",
       "author": {
         "name": "Lucas",
         "email": "6351530+aranlucas@users.noreply.github.com"

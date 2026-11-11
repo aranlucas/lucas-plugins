@@ -1,0 +1,11 @@
+{
+  "shipshape": {
+    "source": "https://github.com/aranlucas/shipshape-mcp/blob/ae8870bad0e01a10a6f46197fcb9633959c8af73/src/mcp.ts",
+    "tools": [
+      "maintenance_priorities",
+      "practice_detail",
+      "practices_overview",
+      "repo_practices"
+    ]
+  }
+}
