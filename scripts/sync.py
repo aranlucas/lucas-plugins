@@ -9,7 +9,13 @@ Source of truth:
   plugins/*/plugin.json
   plugins/*/mcp.json
   plugins/*/cursor.json (optional Cursor presentation metadata)
+  plugins/*/mcp-tools.json (optional MCP tool inventory; validation input only)
   plugins/*/skills/*/SKILL.md
+
+When a plugin has ``mcp-tools.json``, each backticked snake_case name in its
+skills must be a tool that the inventory records. The inventory names the
+upstream source each list was copied from, so a skill cannot keep sending the
+agent to a tool the server has removed.
 
 Claude Code discovers plugin MCP servers from ``.mcp.json`` at the plugin
 root. The portable ``mcp.json`` remains the source of truth; this script emits
@@ -34,6 +40,10 @@ PLUGIN_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json"
 MCP_SCHEMA = "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json"
 MCP_TYPES = {"stdio", "streamable-http", "sse"}
 NAME_RE = re.compile(r"^[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?$")
+TOOL_NAME_RE = re.compile(r"^[a-z][a-z0-9]*(?:_[a-z0-9]+)*$")
+# The packaged servers name tools in snake_case and response fields in
+# camelCase, so a backticked snake_case span in a skill is a tool reference.
+SKILL_TOOL_REF_RE = re.compile(r"`([a-z][a-z0-9]*(?:_[a-z0-9]+)+)`")
 
 
 @dataclass
@@ -90,6 +100,52 @@ def parse_frontmatter(path):
             key, value = line.split(":", 1)
             values[key.strip()] = value.strip()
     return values
+
+
+def validate_tool_inventory(plugin_dir, mcp, errors):
+    """Return the inventoried tool names, or None when the plugin has no inventory."""
+    path = plugin_dir / "mcp-tools.json"
+    if not path.exists():
+        return None
+    label = path.relative_to(ROOT)
+    try:
+        inventory = load(path)
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append(f"{label}: invalid JSON: {exc}")
+        return None
+    if not isinstance(inventory, dict) or not inventory:
+        errors.append(f"{label}: must be a non-empty object keyed by MCP server name")
+        return None
+
+    servers = mcp.get("mcpServers") if isinstance(mcp, dict) else None
+    servers = servers if isinstance(servers, dict) else {}
+    tools = set()
+    for server_name, record in inventory.items():
+        prefix = f"{label}: {server_name}"
+        if server_name not in servers:
+            errors.append(f"{prefix} is not a server in mcp.json")
+        if not isinstance(record, dict):
+            errors.append(f"{prefix} must be an object")
+            continue
+        source = record.get("source")
+        try:
+            parsed = urlparse(source) if isinstance(source, str) else None
+        except ValueError:
+            parsed = None
+        if not parsed or parsed.scheme != "https" or not parsed.hostname:
+            errors.append(f"{prefix}.source must be an absolute HTTPS URL")
+        names = record.get("tools")
+        if (
+            not isinstance(names, list)
+            or not names
+            or not all(isinstance(tool, str) and TOOL_NAME_RE.fullmatch(tool) for tool in names)
+        ):
+            errors.append(f"{prefix}.tools must be a non-empty array of snake_case tool names")
+            continue
+        if len(set(names)) != len(names):
+            errors.append(f"{prefix}.tools must not repeat a tool")
+        tools.update(names)
+    return tools
 
 
 def validate_plugin(name, plugin_dir, errors, entry, source):
@@ -190,6 +246,8 @@ def validate_plugin(name, plugin_dir, errors, entry, source):
                         if not parsed or parsed.scheme not in {"http", "https"} or not parsed.hostname:
                             errors.append(f"{label}.url must be an absolute HTTP(S) URL")
 
+    tools = validate_tool_inventory(plugin_dir, mcp, errors)
+
     skills_dir = plugin_dir / "skills"
     if skills_dir.exists():
         for directory in sorted(skills_dir.iterdir()):
@@ -207,6 +265,13 @@ def validate_plugin(name, plugin_dir, errors, entry, source):
                 )
             if not frontmatter.get("description"):
                 errors.append(f"{skill.relative_to(ROOT)}: description is required")
+            if tools is not None:
+                cited = set(SKILL_TOOL_REF_RE.findall(skill.read_text()))
+                for tool in sorted(cited - tools):
+                    errors.append(
+                        f"{skill.relative_to(ROOT)}: names MCP tool {tool!r}, which "
+                        f"{plugin_dir.relative_to(ROOT)}/mcp-tools.json does not list"
+                    )
 
     return Plugin(name, entry, source, plugin_dir, manifest, mcp, cursor_config,
                   skills_dir.is_dir())

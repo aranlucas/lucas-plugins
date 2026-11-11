@@ -1,7 +1,7 @@
 {
   "name": "groceries",
-  "version": "2.0.0",
-  "description": "Kroger/QFC shopping \u2014 product search, cart, shopping lists, pantry, weekly deals, and meal-planning context via MCP.",
+  "version": "2.1.0",
+  "description": "Kroger/QFC shopping \u2014 product search, saved shopping lists, cart, pantry, meal plans, and weekly deals via MCP.",
   "author": {
     "name": "Lucas",
     "email": "6351530+aranlucas@users.noreply.github.com"

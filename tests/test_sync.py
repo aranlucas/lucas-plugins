@@ -387,6 +387,66 @@ class SyncScriptTests(unittest.TestCase):
         self.assertIn("missing Cursor logo", result.stderr)
         self.assertIn("travel-planner/SKILL.md: missing", result.stderr)
 
+    def test_rejects_skill_naming_tool_removed_from_inventory_without_writes(self):
+        # The maintenance workflow: a server drops a tool, the inventory is updated
+        # from upstream, and every skill that still sends the agent there must fail.
+        inventory_path = self.root / "plugins/shipshape/mcp-tools.json"
+        inventory = json.loads(inventory_path.read_text())
+        inventory["shipshape"]["tools"].remove("maintenance_priorities")
+        inventory_path.write_text(json.dumps(inventory))
+        before = self.snapshot_generated_files()
+
+        for args in ((), ("--check",)):
+            with self.subTest(args=args):
+                result = self.run_sync(*args)
+                self.assertEqual(result.returncode, 1, result.stderr)
+                self.assertIn(
+                    "plugins/shipshape/skills/shipshape-maintainer/SKILL.md: names MCP tool "
+                    "'maintenance_priorities', which plugins/shipshape/mcp-tools.json "
+                    "does not list",
+                    result.stderr,
+                )
+                self.assertNotIn("Traceback", result.stderr)
+                self.assertEqual(before, self.snapshot_generated_files())
+
+        # The inventory is opt-in: without one, skill text is not checked.
+        inventory_path.unlink()
+        self.assertEqual(self.run_sync("--check").returncode, 0)
+
+    def test_rejects_invalid_tool_inventory_without_writes(self):
+        target = self.root / "plugins/shipshape/mcp-tools.json"
+        valid = json.loads(target.read_text())["shipshape"]
+        prefix = "plugins/shipshape/mcp-tools.json:"
+        cases = [
+            ("{broken json", f"{prefix} invalid JSON"),
+            ("[]", f"{prefix} must be a non-empty object keyed by MCP server name"),
+            ("{}", f"{prefix} must be a non-empty object keyed by MCP server name"),
+            (json.dumps({"shipshape": valid, "github": valid}),
+             f"{prefix} github is not a server in mcp.json"),
+            (json.dumps({"shipshape": []}), f"{prefix} shipshape must be an object"),
+            (json.dumps({"shipshape": {**valid, "tools": ["repo_practices"] * 2}}),
+             f"{prefix} shipshape.tools must not repeat a tool"),
+        ]
+        for source in (None, "", "github.com/aranlucas/shipshape-mcp",
+                       "http://github.com/aranlucas/shipshape-mcp", "https://[invalid/mcp"):
+            cases.append((json.dumps({"shipshape": {**valid, "source": source}}),
+                          f"{prefix} shipshape.source must be an absolute HTTPS URL"))
+        for tools in (None, [], "repo_practices", [1], ["RepoPractices"], ["repo-practices"]):
+            cases.append((json.dumps({"shipshape": {**valid, "tools": tools}}),
+                          f"{prefix} shipshape.tools must be a non-empty array of "
+                          "snake_case tool names"))
+
+        for content, diagnostic in cases:
+            for args in ((), ("--check",)):
+                with self.subTest(content=content, args=args):
+                    target.write_text(content)
+                    before = self.snapshot_generated_files()
+                    result = self.run_sync(*args)
+                    self.assertEqual(result.returncode, 1, result.stderr)
+                    self.assertIn(diagnostic, result.stderr)
+                    self.assertNotIn("Traceback", result.stderr)
+                    self.assertEqual(before, self.snapshot_generated_files())
+
     def test_rejects_unregistered_plugin(self):
         target = self.root / "marketplace.json"
         marketplace = json.loads(target.read_text())
